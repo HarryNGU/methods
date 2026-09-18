@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Graph sketching · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Pick any graph family, change its numbers, and see every key feature marked and worked out.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563EB'/%3E%3Cpath d='M5 27 L27 5' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M6 6 Q16 44 26 6' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#2563EB; --acc-soft:color-mix(in srgb, var(--acc) 8%, white); --acc-edge:color-mix(in srgb, var(--acc) 32%, white)}
+  input[type=range]{accent-color:color-mix(in srgb, var(--acc) 82%, black)}
+  .plot{aspect-ratio:560/420}
+  .fams{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px}
+  .fams button{display:inline-flex; align-items:center; gap:7px; color:var(--inksoft); border-color:var(--line); background:#fff; min-height:38px; padding:6px 12px}
+  .fams button i{width:10px; height:10px; border-radius:50%; background:var(--c); flex:none}
+  .fams button:hover{border-color:var(--c); background:#fff}
+  .fams button[aria-pressed="true"]{border-color:var(--c); background:var(--c); color:#fff}
+  .fams button[aria-pressed="true"] i{background:#fff}
+  .fams a{align-self:center; font-size:14px; color:var(--muted); margin-left:4px}
+  .forms{display:grid; gap:4px; margin-top:8px; font-size:15px; color:var(--inksoft)}
+  .forms .k{font-family:var(--mono); font-size:12px; color:var(--muted); margin-right:8px}
+  .facts dd .nt{color:var(--muted); font-size:13.5px; margin-left:6px}
+  ol.steps{margin:0; padding-left:1.3em; font-size:15px} ol.steps li{margin:4px 0}
+  .zoom{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:8px 4px 0}
+  .zoom .seg button{min-height:34px; font-size:13px; padding:4px 10px; white-space:nowrap}
+  .lab{font-size:13px}
+  .gtitle{flex-wrap:wrap}
+  .gtitle .r{max-width:100%; overflow-x:auto; overflow-y:hidden}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">01 · Graph Sketching</span></header>
+  <h1>Graph sketching</h1>
+  <p class="lede">Pick a graph family, then change its numbers. Every key feature is marked on the graph and worked out on the right, the same way you would find it by hand.</p>
+
+  <div class="fams" id="fams" role="group" aria-label="Graph family"></div>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Graph">
+      <div class="gtitle"><span id="gname"></span><span class="r" id="gform"></span></div>
+      <div class="plot" id="plot"><svg id="svg" role="img" aria-label="Graph with its key features marked"></svg><div id="labs"></div></div>
+      <div class="zoom"><span class="hint" style="padding:0" id="hint"></span>
+        <span class="seg" role="group" aria-label="Zoom"><button type="button" data-z="1" aria-pressed="true">Normal</button><button type="button" data-z="2" aria-pressed="false">Zoom out</button></span></div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Graph</span>
+        <div class="eq" id="eq"></div>
+        <div class="forms" id="forms"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls" id="ctls"></section>
+
+      <section class="card pad">
+        <h2 class="cardh">Key features</h2>
+        <dl class="facts" id="feats"></dl>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">How to sketch it</h2>
+        <ol class="steps" id="steps"></ol>
+      </section>
+
+      <div class="presets" id="presets"></div>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 01, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, PI=Math.PI, E=Math.E;
+
+  // ---------- exact numbers ----------
+  function toRat(v){if(!isFinite(v))return null;for(var d=1;d<=36;d++){var n=Math.round(v*d);if(Math.abs(v*d-n)<1e-9){var g=K.gcd(n,d)||1;return [n/g,d/g]}}return null}
+  function ex(v){   // exact fraction when the denominator is small, otherwise 2 decimal places
+    if(Math.abs(v)<1e-12)return '0'; var r=toRat(v); if(!r)return K.dec(v,2);
+    return r[1]===1?String(r[0]):(r[0]<0?'-':'')+'\\tfrac{'+Math.abs(r[0])+'}{'+r[1]+'}';
+  }
+  function exact(v){return !!toRat(v)}
+  function co(v){return v===1?'':v===-1?'-':ex(v)}                 // coefficient
+  function sg(v){return v>=0?'+'+ex(v):'-'+ex(-v)}                 // signed constant
+  function inner(h,x){x=x||'x';return h===0?x:x+(h>0?'-':'+')+ex(Math.abs(h))}   // x - h
+  function fac(v){return v===0?'x':'('+inner(v)+')'}
+  function lin(b,c){return co(b)+'x'+(c===0?'':sg(c))}              // bx + c
+  function pt(x,y){return '\\left('+ex(x)+',\\,'+ex(y)+'\\right)'}
+  function ap(v){return '\\approx '+K.dec(v,2)}
+  function isInt(v){return Math.abs(v-Math.round(v))<1e-9}
+  // sqrt(q) in simplest surd form, q a rational >= 0
+  function surd(q){var r=toRat(q);if(!r)return '\\sqrt{'+K.dec(q,3)+'}';
+    var n=r[0]*r[1],s=1,t=n;for(var f=2;f*f<=t;f++)while(t%(f*f)===0){t/=f*f;s*=f}
+    var c=s/r[1]; if(t===1)return ex(c); var cT=ex(c); return (cT==='1'?'':cT)+'\\sqrt{'+t+'}'}
+  // c + sgn*sqrt(q), exact
+  function plusSurd(c,sgn,q){var s=Math.sqrt(q);if(exact(s))return ex(c+sgn*s);
+    return (c===0?(sgn<0?'-':''):ex(c)+(sgn<0?'-':'+'))+surd(q)}
+  function vals(a,b,st,no0){return K.range(a,b,st).filter(function(v){return !(no0&&v===0)})}
+  var BASES=[[2,'2'],[3,'3'],[E,'e'],[10,'10']];
+  function bT(b){return b===E?'e':String(b)}
+  function logb(v,b){return Math.log(v)/Math.log(b)}
+
+  // ---------- the families ----------
+  var F={
+  linear:{name:'Linear',col:'#2563EB',form:'y=mx+c',
+    params:[{k:'m',t:'m',what:'gradient',v:vals(-4,4,0.5)},{k:'c',t:'c',what:'y intercept',v:vals(-6,6,0.5)}],
+    init:{m:-2,c:3},
+    presets:[['Book example',{m:-2,c:3}],['y = ½x − 1',{m:0.5,c:-1}],['Horizontal: y = 4',{m:0,c:4}]],
+    eq:function(s){return s.m===0?'y='+ex(s.c):'y='+co(s.m)+'x'+(s.c===0?'':sg(s.c))},
+    draw:function(G,s){G.fn(function(x){return s.m*x+s.c})},
+    pts:function(s){var p=[[0,s.c]];if(s.m!==0&&s.c!==0)p.push([-s.c/s.m,0]);return p},
+    feats:function(s){var m=s.m,c=s.c,deg=Math.atan(m)*180/PI;
+      return [['Gradient','m='+ex(m)],['y intercept',pt(0,c)],
+        ['x intercept',m!==0?pt(-c/m,0):(c===0?'\\text{the line is the x axis}':'\\text{none, the line is flat}')],
+        ['Angle to x axis',m===0?'0^\\circ':(m>0?'\\tan^{-1}('+ex(m)+')'+ap(deg):'180^\\circ-\\tan^{-1}('+ex(-m)+')'+ap(180+deg))+'^\\circ']]},
+    steps:['Mark the \\(y\\) intercept \\((0,c)\\).','Set \\(y=0\\) to find the \\(x\\) intercept.','The gradient is rise over run: a negative \\(m\\) slopes down to the right.']},
+
+  quadratic:{name:'Quadratic',col:'#7C3AED',form:'y=a(x-h)^2+k',
+    params:[{k:'a',t:'a',what:'dilation, flips when negative',v:[-3,-2.5,-2,-1.5,-1,-0.5,-0.25,0.25,0.5,1,1.5,2,2.5,3]},
+      {k:'h',t:'h',what:'turning point x',v:vals(-6,6,0.5)},{k:'k',t:'k',what:'turning point y',v:vals(-13,13,0.5)}],
+    init:{a:1,h:1,k:-4},
+    presets:[['Book example',{a:2,h:-0.5,k:-12.5},2],['y = x²',{a:1,h:0,k:0}],['y = −(x − 2)² + 4',{a:-1,h:2,k:4}]],
+    eq:function(s){return 'y='+co(s.a)+(s.h===0?'x^2':'('+inner(s.h)+')^2')+(s.k===0?'':sg(s.k))},
+    forms:function(s){var a=s.a,b=-2*a*s.h,c=a*s.h*s.h+s.k,q=-s.k/a,out=[];
+      out.push(['General','y='+co(a)+'x^2'+(b===0?'':(b>0?'+':'-')+(Math.abs(b)===1?'':ex(Math.abs(b)))+'x')+(c===0?'':sg(c))]);
+      if(q===0) out.push(['Factorised','y='+co(a)+(s.h===0?'x^2':'('+inner(s.h)+')^2')]);
+      else if(q>0&&exact(Math.sqrt(q))){var r=Math.sqrt(q);out.push(['Factorised','y='+co(a)+fac(s.h-r)+fac(s.h+r)])}
+      else if(q>0) out.push(['Factorised','\\text{roots }x='+ex(s.h)+'\\pm'+surd(q)]);
+      else out.push(['Factorised','\\text{no real roots}']);
+      return out},
+    draw:function(G,s){G.aos(s.h);G.fn(function(x){return s.a*(x-s.h)*(x-s.h)+s.k})},
+    pts:function(s){var p=[[s.h,s.k]],q=-s.k/s.a,c=s.a*s.h*s.h+s.k;if(s.h!==0)p.push([0,c]);
+      if(q>0){var r=Math.sqrt(q);p.push([s.h-r,0],[s.h+r,0])}return p},
+    feats:function(s){var a=s.a,b=-2*a*s.h,c=a*s.h*s.h+s.k,q=-s.k/a,D=b*b-4*a*c,xi;
+      if(q<0)xi='\\text{none}';else if(q===0)xi=pt(s.h,0);
+      else{var r=Math.sqrt(q);xi=exact(r)?'x='+ex(s.h-r)+',\\ '+ex(s.h+r):'x='+ex(s.h)+'\\pm'+surd(q)}
+      return [['Turning point',pt(s.h,s.k)],['Axis of symmetry','x='+ex(s.h)],['y intercept',pt(0,c)],
+        ['Discriminant','\\Delta=b^2-4ac='+ex(D),D>0?'two x intercepts':D===0?'one x intercept':'no x intercepts'],['x intercepts',xi]]},
+    steps:['Complete the square to find the turning point \\((h,k)\\).','The discriminant \\(\\Delta=b^2-4ac\\) counts the \\(x\\) intercepts.','Solve \\(y=0\\) for the \\(x\\) intercepts; set \\(x=0\\) for the \\(y\\) intercept.','Draw the curve symmetric about \\(x=h\\).']},
+
+  cubic:{name:'Cubic',col:'#0D9488',form:'y=a(x-r_1)(x-r_2)(x-r_3)',
+    params:[{k:'a',t:'a',what:'flips when negative',v:[-2,-1.5,-1,-0.5,-0.25,0.25,0.5,1,1.5,2]},
+      {k:'r1',t:'r_1',what:'root',v:vals(-5,5,1)},{k:'r2',t:'r_2',what:'root',v:vals(-5,5,1)},{k:'r3',t:'r_3',what:'root',v:vals(-5,5,1)}],
+    init:{a:1,r1:-1,r2:1,r3:3},
+    presets:[['Book example',{a:1,r1:-1,r2:1,r3:3}],['Repeated root',{a:-1,r1:-2,r2:-2,r3:1}],['Three roots',{a:1,r1:-2,r2:0,r3:2}],['Triple root',{a:1,r1:1,r2:1,r3:1}]],
+    eq:function(s){var rs=[s.r1,s.r2,s.r3].sort(function(a,b){return a-b}),cnt={},ord=[];
+      rs.forEach(function(r){if(!cnt[r]){cnt[r]=0;ord.push(r)}cnt[r]++});
+      var f=ord.map(function(r){var base=r===0?'x':'('+inner(r)+')';return base+(cnt[r]>1?'^'+cnt[r]:'')}).join('');
+      return 'y='+co(s.a)+f},
+    forms:function(s){var S1=s.r1+s.r2+s.r3,S2=s.r1*s.r2+s.r1*s.r3+s.r2*s.r3,S3=s.r1*s.r2*s.r3,a=s.a,cs=[a,-a*S1,a*S2,-a*S3],t='';
+      [['x^3',0],['x^2',1],['x',2],['',3]].forEach(function(p){var c=cs[p[1]];if(c===0)return;
+        var body=p[0]===''?ex(Math.abs(c)):(Math.abs(c)===1?'':ex(Math.abs(c)))+p[0];t+=(t===''?(c<0?'-':''):(c<0?'-':'+'))+body});
+      return [['Expanded','y='+(t||'0')]]},
+    f:function(s){return function(x){return s.a*(x-s.r1)*(x-s.r2)*(x-s.r3)}},
+    draw:function(G,s){G.fn(this.f(s))},
+    sp:function(s){var S1=s.r1+s.r2+s.r3,S2=s.r1*s.r2+s.r1*s.r3+s.r2*s.r3,D=S1*S1-3*S2,f=this.f(s);
+      if(D<0)return [];if(D===0)return [[S1/3,f(S1/3)]];var r=Math.sqrt(D);return [[(S1-r)/3,f((S1-r)/3)],[(S1+r)/3,f((S1+r)/3)]]},
+    pts:function(s){var p=[],seen={};[s.r1,s.r2,s.r3].forEach(function(r){if(!seen[r]){seen[r]=1;p.push([r,0])}});
+      if(!seen[0])p.push([0,-s.a*s.r1*s.r2*s.r3]);return p.concat(this.sp(s))},
+    feats:function(s){var cnt={};[s.r1,s.r2,s.r3].forEach(function(r){cnt[r]=(cnt[r]||0)+1});
+      var keys=Object.keys(cnt).map(Number).sort(function(a,b){return a-b});
+      var note=keys.map(function(r){return (cnt[r]===2?'touches':'crosses')+' at '+String(r).replace('-','−')}).join(', ');
+      var sp=this.sp(s),spT=sp.length===0?'\\text{none}':sp.map(function(p){return '\\left('+K.dec(p[0],2)+',\\,'+K.dec(p[1],2)+'\\right)'}).join(',\\ ');
+      var S1=s.r1+s.r2+s.r3,f=this.f(s);
+      return [['x intercepts','x='+keys.map(ex).join(',\\ '),note],['y intercept',pt(0,-s.a*s.r1*s.r2*s.r3)],
+        ['Stationary points',spT,sp.length===1?'a stationary point of inflection':''],
+        ['Point of inflection','\\left('+K.dec(S1/3,2)+',\\,'+K.dec(f(S1/3),2)+'\\right)'],
+        ['End behaviour',s.a>0?'\\text{falls on the left, rises on the right}':'\\text{rises on the left, falls on the right}']]},
+    steps:['Factorise to find the roots (factor theorem, then division).','A single root crosses the axis; a repeated root touches it.','Mark the \\(y\\) intercept and any stationary points.','Join them with the right end behaviour: \\(a>0\\) rises to the right.']},
+
+  hyperbola:{name:'Hyperbola',col:'#EA580C',form:'y=\\frac{a}{x-h}+k',
+    params:[{k:'a',t:'a',what:'flips the branches when negative',v:vals(-4,4,0.5,true)},{k:'h',t:'h',what:'vertical asymptote',v:vals(-6,6,0.5)},{k:'k',t:'k',what:'horizontal asymptote',v:vals(-5,5,0.5)}],
+    init:{a:2,h:1,k:1},
+    presets:[['Book example',{a:2,h:1,k:1}],['y = 1/x',{a:1,h:0,k:0}],['y = −3/(x + 2) − 1',{a:-3,h:-2,k:-1}]],
+    eq:function(s){return 'y='+(s.a<0?'-':'')+'\\dfrac{'+ex(Math.abs(s.a))+'}{'+inner(s.h)+'}'+(s.k===0?'':sg(s.k))},
+    draw:function(G,s){var f=function(x){return s.a/(x-s.h)+s.k};G.asy('x',s.h);G.asy('y',s.k);G.fn(f,G.P.xmin,s.h-1e-6);G.fn(f,s.h+1e-6,G.P.xmax)},
+    pts:function(s){var p=[[s.h,s.k,'centre']];if(s.k!==0)p.push([s.h-s.a/s.k,0]);if(s.h!==0)p.push([0,-s.a/s.h+s.k]);return p},
+    feats:function(s){return [['Vertical asymptote','x='+ex(s.h)],['Horizontal asymptote','y='+ex(s.k)],['Centre',pt(s.h,s.k)],
+      ['x intercept',s.k!==0?pt(s.h-s.a/s.k,0):'\\text{none}'],['y intercept',s.h!==0?pt(0,-s.a/s.h+s.k):'\\text{none}'],
+      ['Branches',s.a>0?'\\text{top right and bottom left}':'\\text{top left and bottom right}'],
+      ['Domain','x\\in\\mathbb{R}\\setminus\\{'+ex(s.h)+'\\}'],['Range','y\\in\\mathbb{R}\\setminus\\{'+ex(s.k)+'\\}']]},
+    steps:['Draw the asymptotes \\(x=h\\) and \\(y=k\\); they cross at the centre.','\\(a>0\\) puts the branches top right and bottom left of the centre; \\(a<0\\) flips them.','Set \\(x=0\\) and \\(y=0\\) for the intercepts.']},
+
+  truncus:{name:'Truncus',col:'#DB2777',form:'y=\\frac{a}{(x-h)^2}+k',
+    params:[{k:'a',t:'a',what:'above when positive, below when negative',v:vals(-4,4,0.5,true)},{k:'h',t:'h',what:'vertical asymptote',v:vals(-6,6,0.5)},{k:'k',t:'k',what:'horizontal asymptote',v:vals(-5,5,0.5)}],
+    init:{a:2,h:1,k:1},
+    presets:[['Book example',{a:2,h:1,k:1}],['y = 1/x²',{a:1,h:0,k:0}],['y = −1/(x + 1)² + 2',{a:-1,h:-1,k:2}]],
+    eq:function(s){return 'y='+(s.a<0?'-':'')+'\\dfrac{'+ex(Math.abs(s.a))+'}{'+(s.h===0?'x^2':'('+inner(s.h)+')^2')+'}'+(s.k===0?'':sg(s.k))},
+    draw:function(G,s){var f=function(x){return s.a/((x-s.h)*(x-s.h))+s.k};G.asy('x',s.h);G.asy('y',s.k);G.fn(f,G.P.xmin,s.h-1e-6);G.fn(f,s.h+1e-6,G.P.xmax)},
+    pts:function(s){var p=[[s.h,s.k,'centre']],q=s.k!==0?-s.a/s.k:-1;if(q>0){var r=Math.sqrt(q);p.push([s.h-r,0],[s.h+r,0])}
+      if(s.h!==0)p.push([0,s.a/(s.h*s.h)+s.k]);return p},
+    feats:function(s){var q=s.k!==0?-s.a/s.k:-1;
+      return [['Vertical asymptote','x='+ex(s.h)],['Horizontal asymptote','y='+ex(s.k)],['Centre',pt(s.h,s.k)],
+      ['x intercepts',q>0?'x='+ex(s.h)+'\\pm'+surd(q):'\\text{none}',q>0&&!exact(Math.sqrt(q))?'≈ '+K.dec(s.h-Math.sqrt(q),2)+' and '+K.dec(s.h+Math.sqrt(q),2):''],
+      ['y intercept',s.h!==0?pt(0,s.a/(s.h*s.h)+s.k):'\\text{none}'],
+      ['Domain','x\\in\\mathbb{R}\\setminus\\{'+ex(s.h)+'\\}'],['Range',s.a>0?'y>'+ex(s.k):'y<'+ex(s.k)]]},
+    steps:['Draw the asymptotes \\(x=h\\) and \\(y=k\\).','Both branches sit on the same side of \\(y=k\\): above when \\(a>0\\), below when \\(a<0\\).','Set \\(x=0\\) and \\(y=0\\) for the intercepts.']},
+
+  circle:{name:'Circle and semicircle',col:'#0891B2',form:'(x-h)^2+(y-k)^2=r^2',follow:true,
+    segs:[{k:'part',t:'Part',o:[['full','Circle'],['top','Top'],['bottom','Bottom'],['left','Left'],['right','Right']]}],
+    params:[{k:'h',t:'h',what:'centre x',v:vals(-6,6,0.5)},{k:'k',t:'k',what:'centre y',v:vals(-9,9,0.5)},{k:'r',t:'r',what:'radius',v:vals(0.5,8,0.5)}],
+    init:{part:'full',h:1,k:1,r:3},
+    presets:[['Book circle',{part:'full',h:1,k:1,r:3}],['Book semicircle',{part:'bottom',h:-3,k:-8,r:5}],['Unit circle',{part:'full',h:0,k:0,r:1}]],
+    eq:function(s){var R=ex(s.r*s.r),X=s.h===0?'x^2':'('+inner(s.h)+')^2',Y=s.k===0?'y^2':'('+inner(s.k,'y')+')^2';
+      if(s.part==='full')return X+'+'+Y+'='+R;
+      if(s.part==='top'||s.part==='bottom')return 'y='+(s.part==='bottom'?'-':'')+'\\sqrt{'+R+'-'+X+'}'+(s.k===0?'':sg(s.k));
+      return 'x='+(s.part==='left'?'-':'')+'\\sqrt{'+R+'-'+Y+'}'+(s.h===0?'':sg(s.h))},
+    arc:{full:[0,2*PI],top:[0,PI],bottom:[PI,2*PI],right:[-PI/2,PI/2],left:[PI/2,3*PI/2]},
+    draw:function(G,s){var t=this.arc[s.part];G.par(function(u){return s.h+s.r*Math.cos(u)},function(u){return s.k+s.r*Math.sin(u)},t[0],t[1])},
+    ints:function(s){var out={x:[],y:[]},q=s.r*s.r-s.k*s.k,w=s.r*s.r-s.h*s.h,ok=function(x,y){
+        return s.part==='full'||(s.part==='top'&&y>=s.k-1e-9)||(s.part==='bottom'&&y<=s.k+1e-9)||(s.part==='right'&&x>=s.h-1e-9)||(s.part==='left'&&x<=s.h+1e-9)};
+      if(q>=0)[-1,1].forEach(function(g){if(q===0&&g>0)return;var x=s.h+g*Math.sqrt(q);if(ok(x,0))out.x.push([x,plusSurd(s.h,g,q)])});
+      if(w>=0)[-1,1].forEach(function(g){if(w===0&&g>0)return;var y=s.k+g*Math.sqrt(w);if(ok(0,y))out.y.push([y,plusSurd(s.k,g,w)])});
+      return out},
+    pts:function(s){var p=[[s.h,s.k,'centre']],I=this.ints(s);I.x.forEach(function(v){p.push([v[0],0])});I.y.forEach(function(v){p.push([0,v[0]])});return p},
+    feats:function(s){var h=s.h,k=s.k,r=s.r,I=this.ints(s),P=s.part;
+      var dom=P==='right'?'['+ex(h)+',\\,'+ex(h+r)+']':P==='left'?'['+ex(h-r)+',\\,'+ex(h)+']':'['+ex(h-r)+',\\,'+ex(h+r)+']';
+      var ran=P==='top'?'['+ex(k)+',\\,'+ex(k+r)+']':P==='bottom'?'['+ex(k-r)+',\\,'+ex(k)+']':'['+ex(k-r)+',\\,'+ex(k+r)+']';
+      return [['Centre',pt(h,k)],['Radius','r='+ex(r)],['Domain',dom],['Range',ran],
+        ['x intercepts',I.x.length?'x='+I.x.map(function(v){return v[1]}).join(',\\ '):'\\text{none}'],
+        ['y intercepts',I.y.length?'y='+I.y.map(function(v){return v[1]}).join(',\\ '):'\\text{none}']]},
+    steps:['Complete the square to read off the centre \\((h,k)\\) and radius \\(r\\).','A semicircle keeps one half: \\(+\\sqrt{}\\) is the top (or right), \\(-\\sqrt{}\\) the bottom (or left).','The domain and range run from the centre, plus and minus \\(r\\).']},
+
+  exponential:{name:'Exponential',col:'#16A34A',form:'y=\\pm a^{\\pm x}+k',
+    segs:[{k:'s1',t:'Sign in front',o:[[1,'+'],[-1,'−']]},{k:'base',t:'Base',o:BASES},{k:'s2',t:'Power',o:[[1,'x'],[-1,'−x']]}],
+    params:[{k:'k',t:'k',what:'horizontal asymptote',v:vals(-6,6,0.5)}],
+    init:{s1:1,base:2,s2:1,k:1},
+    presets:[['Book example',{s1:1,base:2,s2:1,k:1}],['y = −e^{−x} + 2',{s1:-1,base:E,s2:-1,k:2}],['y = 10^x − 3',{s1:1,base:10,s2:1,k:-3}]],
+    eq:function(s){return 'y='+(s.s1<0?'-':'')+bT(s.base)+'^{'+(s.s2<0?'-x':'x')+'}'+(s.k===0?'':sg(s.k))},
+    draw:function(G,s){G.asy('y',s.k);G.fn(function(x){return s.s1*Math.pow(s.base,s.s2*x)+s.k})},
+    xint:function(s){var q=-s.k*s.s1;return q>0?s.s2*logb(q,s.base):null},
+    pts:function(s){var p=[[0,s.s1+s.k]],x=this.xint(s);if(x!==null&&Math.abs(x)>1e-9)p.push([x,0]);return p},
+    feats:function(s){var q=-s.k*s.s1,x=this.xint(s),xt;
+      if(x===null)xt='\\text{none}';else if(isInt(x))xt=pt(Math.round(x),0);
+      else xt='x='+(s.s2<0?'-':'')+'\\log_{'+bT(s.base)+'}\\left('+ex(q)+'\\right)'+ap(x);
+      var dir=(s.s1>0?'up':'down')+'-'+(s.s2>0?'right':'left');
+      return [['Horizontal asymptote','y='+ex(s.k)],['y intercept',pt(0,s.s1+s.k)],['x intercept',xt],
+        ['Range',s.s1>0?'y>'+ex(s.k):'y<'+ex(s.k)],['Direction','\\text{'+dir+'}','from the two signs']]},
+    steps:['Draw the horizontal asymptote \\(y=k\\).','Set \\(x=0\\) for the \\(y\\) intercept; solve \\(y=0\\) with logs for the \\(x\\) intercept.','The sign in front sets up or down; the sign on \\(x\\) sets right or left.']},
+
+  logarithm:{name:'Logarithm',col:'#DC2626',form:'y=\\log_a(bx+c)+k',
+    segs:[{k:'base',t:'Base',o:BASES}],
+    params:[{k:'b',t:'b',what:'flips left when negative',v:[-4,-3,-2,-1,-0.5,0.5,1,2,3,4,6]},{k:'c',t:'c',what:'shifts the asymptote',v:vals(-9,9,1)},{k:'k',t:'k',what:'slides up and down',v:vals(-9,9,0.5)}],
+    init:{base:2,b:1,c:0,k:0},
+    presets:[['y = log₂ x',{base:2,b:1,c:0,k:0}],['Book example',{base:3,b:6,c:9,k:-8},2],['y = logₑ(−x)',{base:E,b:-1,c:0,k:0}]],
+    eq:function(s){return 'y=\\log_{'+bT(s.base)+'}\\left('+lin(s.b,s.c)+'\\right)'+(s.k===0?'':sg(s.k))},
+    va:function(s){return -s.c/s.b},
+    draw:function(G,s){var va=this.va(s),dir=s.b>0?1:-1,P=G.P,span=dir>0?P.xmax-va:va-P.xmin;G.asy('x',va);if(span<=0)return;
+      G.par(function(u){return va+dir*Math.exp(u)},function(u){return logb(Math.abs(s.b)*Math.exp(u),s.base)+s.k},-14,Math.log(span))},
+    xint:function(s){return (Math.pow(s.base,-s.k)-s.c)/s.b},
+    pts:function(s){var p=[[this.xint(s),0]];if(s.c>0)p.push([0,logb(s.c,s.base)+s.k]);return p},
+    feats:function(s){var va=this.va(s),xi=this.xint(s),yi;
+      if(s.c<=0)yi='\\text{none, 0 is not in the domain}';
+      else{var L=logb(s.c,s.base);yi=isInt(L)?pt(0,Math.round(L)+s.k):'\\left(0,\\,\\log_{'+bT(s.base)+'}'+s.c+(s.k===0?'':sg(s.k))+'\\right)'+ap(L+s.k)}
+      return [['Vertical asymptote','x='+ex(va)],['Domain',s.b>0?'x>'+ex(va):'x<'+ex(va)],
+        ['x intercept',exact(xi)?pt(xi,0):'\\left('+K.dec(xi,3)+',\\,0\\right)'],['y intercept',yi],['Range','y\\in\\mathbb{R}']]},
+    steps:['The vertical asymptote is where \\(bx+c=0\\).','The graph only exists where \\(bx+c>0\\).','Set \\(y=0\\) for the \\(x\\) intercept; set \\(x=0\\) for the \\(y\\) intercept if \\(0\\) is in the domain.']},
+
+  sqrt:{name:'Square root',col:'#D97706',form:'y=n\\sqrt{ax+b}+c',
+    params:[{k:'n',t:'n',what:'flips down when negative',v:vals(-3,3,0.5,true)},{k:'a',t:'a',what:'flips left when negative',v:[-5,-4,-3,-2,-1,-0.5,0.5,1,2,3,4,5]},
+      {k:'b',t:'b',what:'moves the start',v:vals(-15,15,1)},{k:'c',t:'c',what:'slides up and down',v:vals(-9,9,0.5)}],
+    init:{n:1,a:1,b:0,c:0},
+    presets:[['y = √x',{n:1,a:1,b:0,c:0}],['Book example',{n:-3,a:-5,b:15,c:6},2],['y = √(−x) − 2',{n:1,a:-1,b:0,c:-2}]],
+    eq:function(s){return 'y='+co(s.n)+'\\sqrt{'+lin(s.a,s.b)+'}'+(s.c===0?'':sg(s.c))},
+    draw:function(G,s){var x0=-s.b/s.a,dir=s.a>0?1:-1,P=G.P,span=dir>0?P.xmax-x0:x0-P.xmin;if(span<=0)return;
+      G.par(function(u){return x0+dir*u*u},function(u){return s.n*Math.sqrt(Math.abs(s.a))*u+s.c},0,Math.sqrt(span))},
+    xint:function(s){var t=-s.c/s.n;return t>=0?((t*t)-s.b)/s.a:null},
+    pts:function(s){var x0=-s.b/s.a,p=[[x0,s.c,'start']],xi=this.xint(s);if(xi!==null&&s.c!==0)p.push([xi,0]);
+      if(s.b>=0&&x0!==0)p.push([0,s.n*Math.sqrt(s.b)+s.c]);return p},
+    feats:function(s){var x0=-s.b/s.a,xi=this.xint(s),yi;
+      if(s.b<0)yi='\\text{none, 0 is not in the domain}';
+      else{var r=Math.sqrt(s.b);if(isInt(r))yi=pt(0,s.n*r+s.c);else{
+        // b = s^2 t, so n*sqrt(b) = (n s) sqrt(t)
+        var sq=1,t=s.b;for(var f=2;f*f<=t;f++)while(t%(f*f)===0){t/=f*f;sq*=f}var cc=s.n*sq;
+        yi='\\left(0,\\,'+(s.c===0?'':ex(s.c))+(cc<0?'-':(s.c===0?'':'+'))+(Math.abs(cc)===1?'':ex(Math.abs(cc)))+'\\sqrt{'+t+'}\\right)'+ap(s.n*r+s.c)}}
+      var dir=(s.n>0?'up':'down')+'-'+(s.a>0?'right':'left');
+      return [['Starting point',pt(x0,s.c)],['Domain',s.a>0?'x\\ge '+ex(x0):'x\\le '+ex(x0)],['Range',s.n>0?'y\\ge '+ex(s.c):'y\\le '+ex(s.c)],
+        ['x intercept',xi===null?'\\text{none}':pt(xi,0)],['y intercept',yi],['Direction','\\text{'+dir+'}','from the two signs']]},
+    steps:['The starting point is where \\(ax+b=0\\).','The sign in front of the root sets up or down; the sign on \\(x\\) inside sets right or left.','Set \\(y=0\\) and \\(x=0\\) for any intercepts that exist.']},
+
+  tan:{name:'Tangent',col:'#0D9488',form:'y=a\\tan\\big(n(x+\\theta)\\big)+b',trig:true,
+    params:[{k:'a',t:'a',what:'stretch, flips when negative',v:vals(-3,3,0.5,true)},{k:'n',t:'n',what:'sets the period',v:[0.5,1,2,3]},
+      {k:'th',t:'\\theta',what:'slides left and right',v:K.range(-12,12,1).map(function(k){return k*PI/12}),pi:true},{k:'b',t:'b',what:'mean line',v:vals(-12,12,0.5)}],
+    init:{a:1,n:1,th:0,b:0},
+    presets:[['y = tan x',{a:1,n:1,th:0,b:0}],['Book example',{a:3,n:2,th:-PI/4,b:-11}],['y = −tan(½x)',{a:-1,n:0.5,th:0,b:0}]],
+    eq:function(s){var aT=co(s.a),nT=s.n===1?'':ex(s.n);
+      var arg=s.th===0?nT+'x':(s.n===1?'x'+K.signed(s.th,K.fracPi):nT+'\\left(x'+K.signed(s.th,K.fracPi)+'\\right)');
+      return 'y='+aT+'\\tan\\left('+arg+'\\right)'+(s.b===0?'':sg(s.b))},
+    forms:function(s){if(s.n===1||s.th===0)return [];var nT=ex(s.n);
+      return [['Expanded','y='+co(s.a)+'\\tan\\left('+nT+'x'+K.signed(s.n*s.th,K.fracPi)+'\\right)'+(s.b===0?'':sg(s.b))]]},
+    per:function(s){return PI/s.n},
+    draw:function(G,s){var per=PI/s.n,x0=-s.th+per/2,P=G.P,f=function(x){return s.a*Math.tan(s.n*(x+s.th))+s.b};
+      var k0=Math.floor((P.xmin-x0)/per)-1,k1=Math.ceil((P.xmax-x0)/per)+1;
+      G.asy('y',s.b,true);
+      for(var k=k0;k<=k1;k++){var A=x0+k*per;if(A>P.xmin&&A<P.xmax)G.asy('x',A);
+        var bold=Math.abs((A-per/2)-(-s.th))<1e-9;G.fn(f,A-per+1e-6,A-1e-6,bold?undefined:false)}},
+    pts:function(s){var q=PI/(4*s.n);return [[-s.th,s.b,null,{dx:-46,dy:s.a>0?-26:6}],[-s.th+q,s.b+s.a,null,{dx:48,dy:-10}],[-s.th-q,s.b-s.a,null,{dx:-48,dy:-10}]]},
+    lab:function(x,y){return '\\left('+K.fracPi(x)+',\\,'+ex(y)+'\\right)'},
+    feats:function(s){var per=PI/s.n,x0=-s.th+per/2,q=PI/(4*s.n);
+      return [['Period','\\tfrac{\\pi}{n}='+K.fracPi(per)],['Asymptotes','x='+K.fracPi(x0)+'+k\\,'+(per===PI?'\\pi':K.fracPi(per)),'k any integer'],
+        ['Mean line','y='+ex(s.b)],['Centre point','\\left('+K.fracPi(-s.th)+',\\,'+ex(s.b)+'\\right)'],
+        ['The ±a points','\\left('+K.fracPi(-s.th+q)+',\\,'+ex(s.b+s.a)+'\\right),\\ \\left('+K.fracPi(-s.th-q)+',\\,'+ex(s.b-s.a)+'\\right)'],['Range','y\\in\\mathbb{R}']]},
+    steps:['Period \\(=\\tfrac{\\pi}{n}\\), the gap between asymptotes.','Set \\(n(x+\\theta)=\\tfrac{\\pi}{2}\\) for one asymptote; add and subtract the period for the rest.','The graph crosses the mean line \\(y=b\\) halfway between asymptotes.','\\(\\pm a\\) gives the points halfway between each crossing and an asymptote.']}
+  };
+  var ORDER=['linear','quadratic','cubic','hyperbola','truncus','circle','exponential','logarithm','sqrt','tan'];
+  var ST={}; ORDER.forEach(function(id){ST[id]=JSON.parse(JSON.stringify(F[id].init))});
+  ST.exponential.base=2; ST.logarithm.base=2;
+  var cur='linear', zoom=1, sets={};
+
+  // ---------- drawing ----------
+  var P=new K.Plot(document.getElementById('svg'),{W:560,H:420,xmin:-8,xmax:8,ymin:-6,ymax:6});
+  var LY={aos:P.el('g',{}),asy:P.el('g',{}),faint:P.el('g',{}),main:P.el('g',{}),dots:P.el('g',{})};
+  function col(){return F[cur].col}
+  var G={P:P,
+    fn:function(f,x0,x1,bold){x0=Math.max(x0===undefined?P.xmin:x0,P.xmin);x1=Math.min(x1===undefined?P.xmax:x1,P.xmax);if(x1<=x0)return;
+      P.el('path',{d:P.path(f,x0,x1,(x1-x0)/600),fill:'none',stroke:col(),'stroke-width':bold===false?2.2:3.2,'stroke-opacity':bold===false?.32:1,'stroke-linejoin':'round','stroke-linecap':'round'},bold===false?LY.faint:LY.main)},
+    par:function(fx,fy,t0,t1){var d='',lo=P.ymin-40,hi=P.ymax+40;for(var i=0;i<=600;i++){var t=t0+(t1-t0)*i/600,y=Math.max(lo,Math.min(hi,fy(t)));
+      d+=(i?'L':'M')+P.sx(fx(t)).toFixed(1)+' '+P.sy(y).toFixed(1)}P.el('path',{d:d,fill:'none',stroke:col(),'stroke-width':3.2,'stroke-linejoin':'round','stroke-linecap':'round'},LY.main)},
+    asy:function(ax,v,soft){var a=ax==='x'?{x1:P.sx(v),x2:P.sx(v),y1:0,y2:P.H}:{x1:0,x2:P.W,y1:P.sy(v),y2:P.sy(v)};
+      a.stroke=col();a['stroke-width']=1.6;a['stroke-dasharray']=soft?'3 6':'7 6';a['stroke-opacity']=soft?.6:.9;P.el('line',a,LY.asy)},
+    aos:function(v){P.el('line',{x1:P.sx(v),x2:P.sx(v),y1:0,y2:P.H,stroke:col(),'stroke-opacity':.35,'stroke-width':1.4,'stroke-dasharray':'3 6'},LY.aos)}
+  };
+
+  // ---------- controls ----------
+  var famBox=document.getElementById('fams');
+  ORDER.forEach(function(id){var b=document.createElement('button');b.type='button';b.style.setProperty('--c',F[id].col);b.setAttribute('data-f',id);
+    b.innerHTML='<i></i>'+F[id].name;b.onclick=function(){choose(id)};famBox.appendChild(b)});
+  var sc=document.createElement('a');sc.href='../trig-graphs/';sc.textContent='Sine and cosine →';famBox.appendChild(sc);
+  document.querySelectorAll('[data-z]').forEach(function(b){b.onclick=function(){zoom=+b.getAttribute('data-z');render()}});
+
+  function buildControls(){
+    var fam=F[cur],box=document.getElementById('ctls'),s=ST[cur];box.innerHTML='';sets={};
+    (fam.segs||[]).forEach(function(sg){
+      var d=document.createElement('div');d.className='ctl';
+      d.innerHTML='<div class="row"><span class="name">'+sg.t+'</span><span class="seg" role="group" aria-label="'+sg.t+'"></span></div>';
+      var seg=d.querySelector('.seg');
+      sg.o.forEach(function(o){var b=document.createElement('button');b.type='button';b.textContent=o[1];b.onclick=function(){s[sg.k]=o[0];render()};seg.appendChild(b)});
+      sets[sg.k]=function(v){[].forEach.call(seg.children,function(b,i){b.setAttribute('aria-pressed',sg.o[i][0]===v)})};
+      box.appendChild(d)});
+    fam.params.forEach(function(p){
+      var d=document.createElement('div');d.className='ctl';var id='p_'+p.k;
+      d.innerHTML='<div class="row"><label class="name" for="'+id+'"><span class="tx"></span> <span class="what">'+p.what+'</span></label><span class="val"></span></div><input type="range" id="'+id+'"><div class="ends"><span></span><span></span></div>';
+      K.tex(d.querySelector('.tx'),p.t);
+      var f=p.pi?K.fracPi:ex, ends=d.querySelector('.ends').children; K.tex(ends[0],f(p.v[0])); K.tex(ends[1],f(p.v[p.v.length-1]));
+      var val=d.querySelector('.val'), setR=K.bindRange(d.querySelector('input'),p.v,function(v){s[p.k]=v;render()});
+      sets[p.k]=function(v){setR(v);K.tex(val,f(v))};
+      box.appendChild(d)});
+    var pr=document.getElementById('presets');pr.innerHTML='';
+    fam.presets.forEach(function(q){var b=document.createElement('button');b.type='button';b.textContent=q[0];
+      b.onclick=function(){ST[cur]=Object.assign({},ST[cur],q[1]);zoom=q[2]||1;render()};pr.appendChild(b)});
+  }
+  function choose(id){cur=id;zoom=1;document.body.style.setProperty('--acc',F[id].col);
+    [].forEach.call(famBox.querySelectorAll('button'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-f')===id)});
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+    buildControls();render()}
+
+  function texText(node,html){   // text with \( maths \) inside
+    node.innerHTML=html.replace(/\\\((.+?)\\\)/g,function(m,t){return '<span data-t="'+t.replace(/"/g,'&quot;')+'"></span>'});
+    node.querySelectorAll('[data-t]').forEach(function(n){K.tex(n,n.getAttribute('data-t'))})}
+
+  window.render=render;
+  function render(){
+    var fam=F[cur],s=ST[cur];
+    // tangent and circles follow their centre when it is far from the origin, so the whole shape stays in view
+    var xs=fam.trig?2*PI*zoom:8*zoom, ys=6*zoom, cx=0, cy=fam.trig&&Math.abs(s.b)>4?s.b:0;
+    if(fam.follow){if(Math.abs(s.k)>4)cy=s.k;if(Math.abs(s.h)>5)cx=s.h}
+    P.setWindow(cx-xs,cx+xs,cy-ys,cy+ys);
+    var xt=[],yt=[],st=2*zoom;
+    if(fam.trig){var den=zoom===1?2:1;for(var j=-8;j<=8;j++){if(j===0||Math.abs(j*PI/den)>=xs)continue;
+      var g=K.gcd(j,den),nn=j/g,dd=den/g,lab=(nn<0?'−':'')+(Math.abs(nn)===1?'':Math.abs(nn))+'π'+(dd===1?'':'/'+dd);xt.push([j*PI/den,lab])}}
+    else for(var v=Math.ceil((cx-xs+0.01)/st)*st;v<cx+xs;v+=st) if(v!==0) xt.push([v,v]);
+    for(var w=Math.ceil((cy-ys+0.01)/st)*st;w<cy+ys;w+=st) if(w!==0) yt.push([w,w]);
+    P.axes({grid:[fam.trig?PI/2:zoom,zoom],xticks:xt,yticks:yt,fs:16});
+    for(var k in LY)P.clear(LY[k]);
+    fam.draw.call(fam,G,s);
+
+    // key points and their labels
+    var labs=document.getElementById('labs');labs.innerHTML='';
+    var seen={};
+    fam.pts.call(fam,s).forEach(function(p){
+      var x=p[0],y=p[1];if(!isFinite(x)||!isFinite(y)||x<P.xmin||x>P.xmax||y<P.ymin||y>P.ymax)return;
+      var key=x.toFixed(6)+','+y.toFixed(6);if(seen[key])return;seen[key]=1;
+      P.el('circle',{cx:P.sx(x),cy:P.sy(y),r:p[2]==='centre'?5:6,fill:'#fff',stroke:col(),'stroke-width':p[2]==='centre'?2:2.6},LY.dots);
+      var l=document.createElement('div');l.className='lab acc';labs.appendChild(l);
+      K.tex(l,fam.lab?fam.lab(x,y):(p[2]==='centre'?'\\text{centre }':'')+'\\left('+ex(x)+',\\,'+ex(y)+'\\right)');
+      var top=P.sy(y)/P.H<0.12, o=p[3]||{}; P.place(l,x,y,o.dy!==undefined?o.dy:(top?10:-26),o.dx||0);
+    });
+
+    K.tex(document.getElementById('gname'),'\\text{'+fam.name+'}');
+    K.tex(document.getElementById('gform'),fam.form);
+    K.tex(document.getElementById('eq'),fam.eq.call(fam,s));
+    var fb=document.getElementById('forms');fb.innerHTML='';
+    (fam.forms?fam.forms.call(fam,s):[]).forEach(function(f){var d=document.createElement('div');d.innerHTML='<span class="k">'+f[0]+'</span><span></span>';K.tex(d.children[1],f[1]);fb.appendChild(d)});
+    var dl=document.getElementById('feats');dl.innerHTML='';
+    fam.feats.call(fam,s).forEach(function(f){var dt=document.createElement('dt');dt.textContent=f[0];var dd=document.createElement('dd');
+      // plain words are set as text so they wrap; maths is typeset
+      var m=document.createElement('span'),pl=/^\\text\{([^}]*)\}$/.exec(f[1]);if(pl)m.textContent=pl[1];else K.tex(m,f[1]);dd.appendChild(m);
+      if(f[2]){var n=document.createElement('span');n.className='nt';n.textContent=f[2];dd.appendChild(n)}
+      dl.appendChild(dt);dl.appendChild(dd)});
+    var ol=document.getElementById('steps');ol.innerHTML='';
+    fam.steps.forEach(function(t){var li=document.createElement('li');texText(li,t);ol.appendChild(li)});
+    document.getElementById('hint').textContent=zoom===2?'Zoomed out: each grid square is 2 units.':'Each grid square is 1 unit.';
+    if(fam.trig) document.getElementById('hint').textContent='The bold branch is one period, centred on its mean line crossing.';
+    document.querySelectorAll('[data-z]').forEach(function(b){b.setAttribute('aria-pressed',+b.getAttribute('data-z')===zoom)});
+    for(var key in sets) sets[key](s[key]);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  function fromHash(){var h=(location.hash||'').replace(/[#\/]/g,'');return F[h]?h:null}
+  window.addEventListener('hashchange',function(){var h=fromHash();if(h&&h!==cur)choose(h)});
+  choose(fromHash()||'linear');
+});
+</script>
+</body>
+</html>

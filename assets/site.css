@@ -32,6 +32,8 @@ h1{font-size:clamp(1.45rem, 4.2vw, 1.95rem); color:var(--ink); line-height:1.2; 
 .layout{display:grid; gap:14px; grid-template-columns:1fr}
 @media (min-width:860px){ .layout{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:start} }
 .stack{display:grid; gap:14px}
+/* grid children may shrink below their content width, so nothing pushes the page sideways on phones */
+.layout>*,.stack>*{min-width:0}
 
 .card{background:var(--card); border:1px solid var(--line); border-radius:8px}
 .pad{padding:14px 16px}
@@ -56,7 +58,7 @@ h1{font-size:clamp(1.45rem, 4.2vw, 1.95rem); color:var(--ink); line-height:1.2; 
 .controls{padding:6px 16px 10px}
 .ctl{padding:10px 0 8px; border-bottom:1px solid var(--gridline)}
 .ctl:last-child{border-bottom:0}
-.ctl .row{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+.ctl .row{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:10px}
 .ctl .name{color:var(--ink); font-weight:700}
 .ctl .what{color:var(--muted); font-size:13.5px; font-weight:400}
 .ctl .val{color:var(--acc); font-weight:700; font-size:18px; min-width:3.2em; text-align:right; white-space:nowrap}
@@ -68,8 +70,9 @@ input[type=range]{width:100%; margin:8px 0 2px; accent-color:var(--acc); height:
 .seg button+button{border-left:1px solid var(--acc)}
 .seg button[aria-pressed="true"]{background:var(--acc); color:#fff}
 
-.facts{display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:15px; margin:0}
-.facts dt{color:var(--muted)} .facts dd{margin:0; color:var(--ink)}
+.facts{display:grid; grid-template-columns:auto minmax(0,1fr); gap:5px 14px; font-size:15px; margin:0}
+.facts dt{color:var(--muted)} .facts dd{margin:0; color:var(--ink); min-width:0; overflow-x:auto; overflow-y:hidden}
+@media (max-width:420px){ .facts{grid-template-columns:1fr; gap:0} .facts dd{margin-bottom:8px} }
 .cardh{font-size:15px; margin:0 0 8px; color:var(--ink)}
 table.t{border-collapse:collapse; width:100%; font-size:15px}
 table.t th{font-family:var(--mono); font-size:12px; color:var(--muted); font-weight:400; text-align:left; padding:4px 6px; background:rgba(28,28,33,.035)}
