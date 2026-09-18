@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transformations of y = x² · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Change a, h and k in y = a(x − h)² + k and watch the image move away from the parent.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23EA580C'/%3E%3Cpath d='M6 7 Q16 40 26 7' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#FCFCFA; --card:#FFFFFF; --ink:#1C1C21; --inksoft:#3B3B43; --muted:#7A7A82;
+    --line:#E1E0D8; --gridline:#EFEEE8; --acc:#EA580C; --acc-soft:#FDF1EA; --parent:#9A9AA2;
+    --sans:"KaTeX_SansSerif", "Latin Modern Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono:"KaTeX_Typewriter", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; color:var(--inksoft); font-family:var(--sans); font-size:17px; line-height:1.5;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(to right, rgba(28,28,33,.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(28,28,33,.055) 1px, transparent 1px);
+    background-size:23px 23px;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:14px 16px 40px}
+
+  .run{display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    font-size:13px; color:var(--muted); border-bottom:1px solid var(--line); padding-bottom:6px}
+  .run .sec{color:var(--acc); font-weight:700}
+
+  h1{font-size:clamp(1.45rem, 4.2vw, 1.95rem); color:var(--ink); line-height:1.2; margin:22px 0 6px; font-weight:700; text-wrap:balance}
+  .lede{margin:0 0 18px; max-width:62ch}
+
+  .layout{display:grid; gap:14px; grid-template-columns:1fr}
+  @media (min-width:860px){ .layout{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:start} }
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:8px}
+  .graph{padding:10px}
+  .gtitle{font-family:var(--mono); font-size:12.5px; color:var(--muted); padding:2px 4px 6px}
+  .plot{position:relative; width:100%; aspect-ratio:1/1; touch-action:manipulation; user-select:none; -webkit-user-select:none}
+  .plot svg{position:absolute; inset:0; width:100%; height:100%; display:block; overflow:visible}
+  .lab{position:absolute; transform:translate(-50%,0); white-space:nowrap; pointer-events:none;
+    font-size:15px; line-height:1; padding:2px 4px; border-radius:3px; background:rgba(255,255,255,.85)}
+  .lab.tp{color:var(--acc); font-weight:700}
+  .lab.parent{color:var(--parent)}
+  .hint{font-size:13px; color:var(--muted); padding:6px 4px 0}
+
+  .side{display:grid; gap:14px}
+  .eqcard{padding:14px 16px 16px; background:var(--acc-soft); border-color:#F6CDB6}
+  .chip{display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--acc); border:1px solid var(--acc); border-radius:3px; padding:1px 6px 2px}
+  .eq{font-size:clamp(1.5rem, 6vw, 1.9rem); color:var(--ink); margin-top:10px; min-height:1.6em; overflow-x:auto; overflow-y:hidden}
+  .eq .katex{font-size:1em}
+
+  .controls{padding:6px 16px 10px}
+  .ctl{padding:10px 0 8px; border-bottom:1px solid var(--gridline)}
+  .ctl:last-child{border-bottom:0}
+  .ctl .row{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .ctl .name{color:var(--ink); font-weight:700}
+  .ctl .what{color:var(--muted); font-size:13.5px; font-weight:400}
+  .ctl .val{color:var(--acc); font-weight:700; font-size:18px; min-width:3.2em; text-align:right}
+  input[type=range]{width:100%; margin:8px 0 2px; accent-color:var(--acc); height:28px; cursor:pointer}
+  .ends{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); font-family:var(--mono)}
+
+  .steps{padding:14px 16px}
+  .steps h2{font-size:15px; margin:0 0 8px; color:var(--ink)}
+  .steps ol{margin:0 0 10px; padding-left:1.3em}
+  .steps li{margin:3px 0}
+  .steps .order{font-size:13.5px; color:var(--muted); margin:0 0 12px}
+  .map{border-top:1px solid var(--gridline); padding-top:10px; display:grid; gap:4px}
+  .map .k{font-size:13px; color:var(--muted)}
+  .facts{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:15px; margin-top:6px}
+  .facts dt{color:var(--muted)} .facts dd{margin:0; color:var(--ink)}
+
+  .presets{display:flex; flex-wrap:wrap; gap:8px}
+  button{font:inherit; font-size:14px; color:var(--acc); background:var(--card); border:1px solid var(--acc);
+    border-radius:6px; padding:8px 12px; cursor:pointer; min-height:40px}
+  button:hover{background:var(--acc-soft)}
+  button:focus-visible, input:focus-visible, .handle:focus-visible{outline:3px solid rgba(234,88,12,.45); outline-offset:2px}
+  .handle{cursor:grab; touch-action:none} .handle:active{cursor:grabbing}
+
+  footer{margin-top:26px; font-size:13px; color:var(--muted); border-top:1px solid var(--line); padding-top:10px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><span>Mathematical Methods 3 &amp; 4</span><span class="sec">04 · Transformations</span></header>
+
+  <h1>Transformations of <span class="m" data-tex="y=x^2">y = x²</span></h1>
+  <p class="lede">Move the sliders, or drag the orange turning point, and watch the image move away from the dashed parent.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Graph">
+      <div class="gtitle">Parent (dashed) and image</div>
+      <div class="plot" id="plot">
+        <svg id="svg" viewBox="0 0 560 560" role="img" aria-label="Graph of the parent y equals x squared and the transformed image"></svg>
+        <div class="lab parent" id="labParent"></div>
+        <div class="lab tp" id="labTp"></div>
+      </div>
+      <div class="hint">Tip: drag the turning point to set h and k together.</div>
+    </section>
+
+    <div class="side">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Image</span>
+        <div class="eq" id="eq"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><label class="name" for="a"><span class="m" data-tex="a">a</span> <span class="what">dilation, and reflection when negative</span></label><span class="val" id="va"></span></div>
+          <input type="range" id="a" min="0" max="13" step="1">
+          <div class="ends"><span>−3</span><span>3</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="h"><span class="m" data-tex="h">h</span> <span class="what">slides left and right</span></label><span class="val" id="vh"></span></div>
+          <input type="range" id="h" min="-5" max="5" step="0.5">
+          <div class="ends"><span>−5</span><span>5</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="k"><span class="m" data-tex="k">k</span> <span class="what">slides up and down</span></label><span class="val" id="vk"></span></div>
+          <input type="range" id="k" min="-5" max="5" step="0.5">
+          <div class="ends"><span>−5</span><span>5</span></div>
+        </div>
+      </section>
+
+      <section class="card steps">
+        <h2>What has been done to <span class="m" data-tex="y=x^2">y = x²</span></h2>
+        <ol id="steps"></ol>
+        <p class="order">Dilate and reflect first, then translate.</p>
+        <div class="map">
+          <span class="k">Mapping (Type 1 in the book)</span>
+          <div id="mapx"></div>
+          <div id="mapy"></div>
+        </div>
+        <dl class="facts">
+          <dt>Turning point</dt><dd id="ftp"></dd>
+          <dt>Axis of symmetry</dt><dd id="fax"></dd>
+          <dt><span class="m" data-tex="y">y</span> intercept</dt><dd id="fyi"></dd>
+        </dl>
+      </section>
+
+      <div class="presets">
+        <button type="button" data-p="2,3,1">Book example</button>
+        <button type="button" data-p="-1,0,0">Reflect in the x axis</button>
+        <button type="button" data-p="0.5,0,0">Dilate by ½</button>
+        <button type="button" data-p="1,0,0">Back to the parent</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 04, by Harry Nguyen.</footer>
+</div>
+
+<script>
+(function(){
+  // allowed values of a: never 0, since a dilation by factor 0 is not a transformation
+  var A_VALUES=[-3,-2.5,-2,-1.5,-1,-0.5,-0.25,0.25,0.5,1,1.5,2,2.5,3];
+  var XMIN=-7, XMAX=7, YMIN=-6, YMAX=8, W=560, H=560;
+  var S={a:2,h:3,k:1};
+  var NS="http://www.w3.org/2000/svg";
+  var svg=document.getElementById('svg'), plot=document.getElementById('plot');
+  var ia=document.getElementById('a'), ih=document.getElementById('h'), ik=document.getElementById('k');
+
+  function sx(x){return (x-XMIN)/(XMAX-XMIN)*W}
+  function sy(y){return (YMAX-y)/(YMAX-YMIN)*H}
+  function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e}
+
+  // ---- numbers as exact fractions, the way the book writes them ----
+  function gcd(a,b){return b?gcd(b,a%b):a}
+  function frac(v){
+    if(Math.abs(v)<1e-12) return '0';
+    var s=v<0?'-':'', x=Math.abs(v), dens=[1,2,4,8,16,32,64];
+    for(var i=0;i<dens.length;i++){var d=dens[i],n=Math.round(x*d);
+      if(Math.abs(x*d-n)<1e-9){var g=gcd(n,d);n/=g;d/=g;return d===1?s+n:s+'\\tfrac{'+n+'}{'+d+'}';}}
+    return s+(+x.toFixed(3));
+  }
+  function signed(v){return v>0?'+'+frac(v):'-'+frac(-v)}
+
+  function eqTex(a,h,k){
+    var aT=a===1?'':a===-1?'-':frac(a);
+    var core=h===0?'x^2':'(x'+(h>0?'-':'+')+frac(Math.abs(h))+')^2';
+    return 'y='+aT+core+(k===0?'':signed(k));
+  }
+
+  // ---- maths rendering, with a plain text fallback if KaTeX cannot load ----
+  function plain(t){return t.replace(/\\tfrac\{(\d+)\}\{(\d+)\}/g,'$1/$2').replace(/\^2/g,'²').replace(/\\,/g,' ').replace(/\\[a-z]+/g,'').replace(/[{}]/g,'').replace(/-/g,'−')}
+  function tex(node,t){if(window.katex){try{katex.render(t,node,{throwOnError:false});return}catch(e){}}node.textContent=plain(t)}
+
+  // ---- static layer: grid, axes, ticks ----
+  var defs=el('defs',{});
+  var cp=el('clipPath',{id:'win'},defs); el('rect',{x:0,y:0,width:W,height:H},cp);
+  var mk=el('marker',{id:'arr',viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'7',markerHeight:'7',orient:'auto-start-reverse'},defs);
+  el('path',{d:'M0 0 L10 5 L0 10 z',fill:'#A6A6AD'},mk);
+  var g=el('g',{});
+  for(var x=XMIN+1;x<XMAX;x++) el('line',{x1:sx(x),y1:0,x2:sx(x),y2:H,stroke:'#EFEEE8','stroke-width':1},g);
+  for(var y=YMIN+1;y<YMAX;y++) el('line',{x1:0,y1:sy(y),x2:W,y2:sy(y),stroke:'#EFEEE8','stroke-width':1},g);
+  el('line',{x1:4,y1:sy(0),x2:W-4,y2:sy(0),stroke:'#A6A6AD','stroke-width':1.4,'marker-end':'url(#arr)'},g);
+  el('line',{x1:sx(0),y1:H-4,x2:sx(0),y2:4,stroke:'#A6A6AD','stroke-width':1.4,'marker-end':'url(#arr)'},g);
+  function t(txt,x,y,anchor){var n=el('text',{x:x,y:y,'text-anchor':anchor||'middle','font-size':15,fill:'#8C8C94','font-family':'KaTeX_Main, serif'},g);n.textContent=txt;return n}
+  [-6,-4,-2,2,4,6].forEach(function(v){t(String(v).replace('-','−'),sx(v),sy(0)+20)});
+  [-4,-2,2,4,6].forEach(function(v){t(String(v).replace('-','−'),sx(0)-8,sy(v)+5,'end')});
+  var xl=t('x',W-10,sy(0)-10,'end'); xl.setAttribute('font-style','italic'); xl.setAttribute('font-size',18);
+  var yl=t('y',sx(0)+12,18,'start'); yl.setAttribute('font-style','italic'); yl.setAttribute('font-size',18);
+
+  // ---- dynamic layer ----
+  var dyn=el('g',{'clip-path':'url(#win)'});
+  var axis=el('line',{stroke:'#EA580C','stroke-opacity':.35,'stroke-width':1.5,'stroke-dasharray':'5 6'},dyn);
+  var parent=el('path',{fill:'none',stroke:'#9A9AA2','stroke-width':2.2,'stroke-dasharray':'7 7','stroke-linecap':'round'},dyn);
+  var image=el('path',{fill:'none',stroke:'#EA580C','stroke-width':3.2,'stroke-linejoin':'round','stroke-linecap':'round'},dyn);
+  var yint=el('circle',{r:4.5,fill:'#fff',stroke:'#EA580C','stroke-width':2},dyn);
+  var tp=el('circle',{r:7,fill:'#fff',stroke:'#EA580C','stroke-width':3},dyn);
+  var hit=el('circle',{r:34,fill:'transparent',class:'handle',tabindex:'0',role:'button','aria-label':'Turning point. Use the arrow keys to move it.'});
+
+  function curve(f){
+    var d='',step=0.04;
+    for(var x=XMIN;x<=XMAX+1e-9;x+=step){var y=Math.max(-60,Math.min(60,f(x)));d+=(d?'L':'M')+sx(x).toFixed(1)+' '+sy(y).toFixed(1);}
+    return d;
+  }
+  parent.setAttribute('d',curve(function(x){return x*x}));
+
+  function place(node,x,y,dy){var r=plot.getBoundingClientRect();node.style.left=(sx(x)/W*r.width)+'px';node.style.top=(sy(y)/H*r.height+dy)+'px'}
+
+  // ---- words for what the transformation does ----
+  function steps(a,h,k){
+    var out=[];
+    if(Math.abs(a)!==1) out.push('Dilation by factor '+frac(Math.abs(a))+' from the \\(x\\) axis');
+    if(a<0) out.push('Reflection in the \\(x\\) axis');
+    if(h!==0) out.push('Translation '+frac(Math.abs(h))+(Math.abs(h)===1?' unit ':' units ')+(h>0?'right':'left'));
+    if(k!==0) out.push('Translation '+frac(Math.abs(k))+(Math.abs(k)===1?' unit ':' units ')+(k>0?'up':'down'));
+    return out;
+  }
+  function richLi(ol,text){
+    var li=document.createElement('li');
+    text.split(/(\\\(.*?\\\)|\\tfrac\{\d+\}\{\d+\})/).forEach(function(part){
+      if(!part) return;
+      var m=part.match(/^\\\((.*)\\\)$/);
+      if(m){var s=document.createElement('span');tex(s,m[1]);li.appendChild(s);}
+      else if(/^\\tfrac/.test(part)){var s2=document.createElement('span');tex(s2,part);li.appendChild(s2);}
+      else li.appendChild(document.createTextNode(part));
+    });
+    ol.appendChild(li);
+  }
+
+  function render(){
+    var a=S.a,h=S.h,k=S.k;
+    image.setAttribute('d',curve(function(x){return a*(x-h)*(x-h)+k}));
+    axis.setAttribute('x1',sx(h));axis.setAttribute('x2',sx(h));axis.setAttribute('y1',0);axis.setAttribute('y2',H);
+    tp.setAttribute('cx',sx(h));tp.setAttribute('cy',sy(k));
+    hit.setAttribute('cx',sx(h));hit.setAttribute('cy',sy(k));
+    var y0=a*h*h+k; yint.setAttribute('cx',sx(0));yint.setAttribute('cy',sy(y0));
+    yint.style.display=(h===0||y0<YMIN||y0>YMAX)?'none':'';
+
+    tex(document.getElementById('eq'),eqTex(a,h,k));
+    tex(document.getElementById('va'),frac(a));
+    tex(document.getElementById('vh'),frac(h));
+    tex(document.getElementById('vk'),frac(k));
+
+    var labTp=document.getElementById('labTp');
+    tex(labTp,'('+frac(h)+',\\,'+frac(k)+')');
+    place(labTp,h,k,a>0?14:-34);
+    place(document.getElementById('labParent'),-4.4,6.1,0);
+
+    var ol=document.getElementById('steps'); ol.innerHTML='';
+    var st=steps(a,h,k);
+    if(!st.length){var li=document.createElement('li');li.textContent='Nothing yet: the image is the parent itself.';ol.appendChild(li)}
+    st.forEach(function(s){richLi(ol,s)});
+
+    tex(document.getElementById('mapx'),h===0?"x'=x":"x'=x"+signed(h));
+    var yA=a===1?'y':a===-1?'-y':frac(a)+'y';
+    tex(document.getElementById('mapy'),"y'="+yA+(k===0?'':signed(k)));
+    tex(document.getElementById('ftp'),'('+frac(h)+',\\,'+frac(k)+')');
+    tex(document.getElementById('fax'),'x='+frac(h));
+    tex(document.getElementById('fyi'),'(0,\\,'+frac(y0)+')');
+
+    ia.value=A_VALUES.indexOf(a); ih.value=h; ik.value=k;
+  }
+
+  // ---- inputs ----
+  ia.addEventListener('input',function(){S.a=A_VALUES[+ia.value];render()});
+  ih.addEventListener('input',function(){S.h=+ih.value;render()});
+  ik.addEventListener('input',function(){S.k=+ik.value;render()});
+  document.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){
+    var p=b.getAttribute('data-p').split(',').map(Number);S.a=p[0];S.h=p[1];S.k=p[2];render();})});
+
+  function snap(v){return Math.max(-5,Math.min(5,Math.round(v*2)/2))}
+  var dragging=false;
+  function fromEvent(e){var r=svg.getBoundingClientRect();
+    return {x:XMIN+(e.clientX-r.left)/r.width*(XMAX-XMIN), y:YMAX-(e.clientY-r.top)/r.height*(YMAX-YMIN)}}
+  hit.addEventListener('pointerdown',function(e){dragging=true;hit.setPointerCapture(e.pointerId);e.preventDefault()});
+  // stop the page scrolling on phones when a drag starts on the turning point
+  hit.addEventListener('touchstart',function(e){e.preventDefault()},{passive:false});
+  hit.addEventListener('pointermove',function(e){if(!dragging)return;var p=fromEvent(e);
+    var nh=snap(p.x),nk=snap(p.y); if(nh!==S.h||nk!==S.k){S.h=nh;S.k=nk;render()}});
+  function end(){dragging=false}
+  hit.addEventListener('pointerup',end); hit.addEventListener('pointercancel',end);
+  hit.addEventListener('keydown',function(e){
+    var d={ArrowLeft:[-.5,0],ArrowRight:[.5,0],ArrowUp:[0,.5],ArrowDown:[0,-.5]}[e.key];
+    if(!d)return; e.preventDefault(); S.h=snap(S.h+d[0]); S.k=snap(S.k+d[1]); render();});
+
+  window.addEventListener('resize',render);
+
+  function init(){
+    document.querySelectorAll('.m[data-tex]').forEach(function(n){tex(n,n.getAttribute('data-tex'))});
+    tex(document.getElementById('labParent'),'y=x^2');
+    render();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  // re-render once KaTeX's fonts arrive so label positions and widths settle
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function(){init()});
+})();
+</script>
+</body>
+</html>
