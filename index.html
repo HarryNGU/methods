@@ -7,31 +7,45 @@
 <meta name="description" content="Interactive diagrams that go with the Mathematical Methods 3 &amp; 4 Bound Reference by Harry Nguyen.">
 <meta name="theme-color" content="#FCFCFA">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<link rel="stylesheet" href="assets/site.css">
 <style>
-  :root{color-scheme:light; --paper:#FCFCFA; --ink:#1C1C21; --inksoft:#3B3B43; --muted:#7A7A82; --line:#E1E0D8; --acc:#EA580C}
-  *{box-sizing:border-box}
-  body{margin:0; color:var(--inksoft); background-color:var(--paper);
-    font-family:"KaTeX_SansSerif", system-ui, -apple-system, "Segoe UI", sans-serif; font-size:17px; line-height:1.5;
-    background-image:linear-gradient(to right, rgba(28,28,33,.055) 1px, transparent 1px),linear-gradient(to bottom, rgba(28,28,33,.055) 1px, transparent 1px);
-    background-size:23px 23px}
-  .wrap{max-width:720px; margin:0 auto; padding:14px 16px 40px}
-  .run{font-size:13px; color:var(--muted); border-bottom:1px solid var(--line); padding-bottom:6px}
-  h1{font-size:clamp(1.45rem,4.2vw,1.95rem); color:var(--ink); margin:22px 0 6px; line-height:1.2}
-  p{margin:0 0 18px; max-width:62ch}
-  a.item{display:block; background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px; text-decoration:none; color:inherit}
-  a.item:hover{border-color:var(--acc)}
-  a.item:focus-visible{outline:3px solid rgba(234,88,12,.45); outline-offset:2px}
-  .num{font-weight:700; color:var(--acc); margin-right:8px}
-  .t{font-weight:700; color:var(--ink)}
-  .s{display:block; font-size:14px; color:var(--muted); margin-top:2px}
+  .wrap{max-width:760px}
+  .list{display:grid; gap:10px}
+  a.item{display:flex; gap:14px; align-items:flex-start; background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px; text-decoration:none; color:inherit}
+  a.item:hover{border-color:var(--c)}
+  .num{flex:none; font-weight:700; color:#fff; background:var(--c); border-radius:4px; font-size:13px; padding:2px 7px; margin-top:2px}
+  .t{font-weight:700; color:var(--ink); display:block}
+  .s{display:block; font-size:14.5px; color:var(--muted); margin-top:2px}
+  h2{font-size:14px; color:var(--muted); font-weight:400; font-family:var(--mono); margin:22px 0 8px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="run">Mathematical Methods 3 &amp; 4</div>
+  <div class="run"><span>Mathematical Methods 3 &amp; 4</span><span>Interactive diagrams</span></div>
   <h1>Interactive diagrams</h1>
-  <p>These go with the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em> by Harry Nguyen. They work on any phone, tablet or computer, with nothing to install and no account.</p>
-  <a class="item" href="transformations/"><span class="num">04</span><span class="t">Transformations of y = x²</span><span class="s">Change a, h and k in y = a(x − h)² + k and watch the image move away from the parent.</span></a>
+  <p class="lede">These go with the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em> by Harry Nguyen. They work on any phone, tablet or computer, with nothing to install and no account.</p>
+
+  <h2>03 · Trigonometry</h2>
+  <div class="list">
+    <a class="item" href="unit-circle/" style="--c:#0D9488"><span class="num">03</span><span><span class="t">Symmetry with ASTC</span><span class="s">Drag an angle round the unit circle and see its three reflections, their signs and exact values.</span></span></a>
+    <a class="item" href="trig-graphs/" style="--c:#0D9488"><span class="num">03</span><span><span class="t">Sketching sine and cosine</span><span class="s">Change a, n, θ and b and watch one cycle and its five key points move.</span></span></a>
+  </div>
+  <h2>04 · Transformations</h2>
+  <div class="list">
+    <a class="item" href="transformations/" style="--c:#EA580C"><span class="num">04</span><span><span class="t">Transformations of y = x²</span><span class="s">Change a, h and k in y = a(x − h)² + k and watch the image move away from the parent.</span></span></a>
+  </div>
+  <h2>05 · Calculus</h2>
+  <div class="list">
+    <a class="item" href="derivative/" style="--c:#4F46E5"><span class="num">05</span><span><span class="t">The derivative graph</span><span class="s">Drag a point along f and watch the gradient of its tangent trace out f′.</span></span></a>
+    <a class="item" href="area/" style="--c:#4F46E5"><span class="num">05</span><span><span class="t">Estimating area under a graph</span><span class="s">Left endpoint, right endpoint and trapezium estimates against the exact area.</span></span></a>
+  </div>
+  <h2>06 · Probability</h2>
+  <div class="list">
+    <a class="item" href="binomial/" style="--c:#16A34A"><span class="num">06</span><span><span class="t">The binomial distribution</span><span class="s">Change n and p and read off any binomial probability, with the TI-Nspire command.</span></span></a>
+    <a class="item" href="normal/" style="--c:#16A34A"><span class="num">06</span><span><span class="t">The normal distribution</span><span class="s">Shade a probability, or find k with invNorm, and see the z scale underneath.</span></span></a>
+    <a class="item" href="confidence/" style="--c:#16A34A"><span class="num">06</span><span><span class="t">What a confidence interval means</span><span class="s">Take hundreds of samples and count how many intervals catch the true p.</span></span></a>
+  </div>
+  <footer>Made to go with the printed reference. Scan the code in the book, or bookmark this page.</footer>
 </div>
 </body>
 </html>

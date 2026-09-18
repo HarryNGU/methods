@@ -1,0 +1,94 @@
+/* Shared look for the Methods 3 & 4 interactive diagrams.
+   Matches the bound reference: Computer Modern sans (via KaTeX's font), notebook grid,
+   white cards, one accent per section. Set --acc and --acc-soft on <body> per page. */
+:root{
+  color-scheme: light;
+  --paper:#FCFCFA; --card:#FFFFFF; --ink:#1C1C21; --inksoft:#3B3B43; --muted:#7A7A82;
+  --line:#E1E0D8; --gridline:#EFEEE8; --faint:#9A9AA2;
+  --acc:#EA580C; --acc-soft:#FDF1EA; --acc-edge:#F6CDB6;
+  --good:#16A34A; --bad:#DC2626;
+  --sans:"KaTeX_SansSerif", "Latin Modern Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"KaTeX_Typewriter", ui-monospace, "SF Mono", Menlo, monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; color:var(--inksoft); font-family:var(--sans); font-size:17px; line-height:1.5;
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(to right, rgba(28,28,33,.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(28,28,33,.055) 1px, transparent 1px);
+  background-size:23px 23px;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:14px 16px 40px}
+.run{display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+  font-size:13px; color:var(--muted); border-bottom:1px solid var(--line); padding-bottom:6px}
+.run a{color:inherit; text-decoration:none}
+.run a:hover{text-decoration:underline}
+.run .sec{color:var(--acc); font-weight:700}
+h1{font-size:clamp(1.45rem, 4.2vw, 1.95rem); color:var(--ink); line-height:1.2; margin:22px 0 6px; font-weight:700; text-wrap:balance}
+.lede{margin:0 0 18px; max-width:64ch}
+
+.layout{display:grid; gap:14px; grid-template-columns:1fr}
+@media (min-width:860px){ .layout{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:start} }
+.stack{display:grid; gap:14px}
+
+.card{background:var(--card); border:1px solid var(--line); border-radius:8px}
+.pad{padding:14px 16px}
+.graph{padding:10px}
+.gtitle{font-family:var(--mono); font-size:12.5px; color:var(--muted); padding:2px 4px 6px; display:flex; justify-content:space-between; gap:8px}
+.gtitle .r{color:var(--acc)}
+.plot{position:relative; width:100%; touch-action:manipulation; user-select:none; -webkit-user-select:none}
+.plot svg{position:absolute; inset:0; width:100%; height:100%; display:block; overflow:visible}
+.lab{position:absolute; transform:translate(-50%,0); white-space:nowrap; pointer-events:none;
+  font-size:14px; line-height:1; padding:2px 4px; border-radius:3px; background:rgba(255,255,255,.88)}
+.lab.acc{color:var(--acc); font-weight:700}
+.lab.faint{color:var(--faint)}
+.hint{font-size:13px; color:var(--muted); padding:6px 4px 0}
+
+.eqcard{padding:14px 16px 16px; background:var(--acc-soft); border-color:var(--acc-edge)}
+.chip{display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--acc); border:1px solid var(--acc); border-radius:3px; padding:1px 6px 2px}
+.eq{font-size:clamp(1.3rem, 5.4vw, 1.75rem); color:var(--ink); margin-top:10px; min-height:1.6em; overflow-x:auto; overflow-y:hidden}
+.eq .katex{font-size:1em}
+.sub{font-size:14px; color:var(--muted); margin-top:4px}
+
+.controls{padding:6px 16px 10px}
+.ctl{padding:10px 0 8px; border-bottom:1px solid var(--gridline)}
+.ctl:last-child{border-bottom:0}
+.ctl .row{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+.ctl .name{color:var(--ink); font-weight:700}
+.ctl .what{color:var(--muted); font-size:13.5px; font-weight:400}
+.ctl .val{color:var(--acc); font-weight:700; font-size:18px; min-width:3.2em; text-align:right; white-space:nowrap}
+input[type=range]{width:100%; margin:8px 0 2px; accent-color:var(--acc); height:28px; cursor:pointer}
+.ends{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); font-family:var(--mono)}
+
+.seg{display:inline-flex; border:1px solid var(--acc); border-radius:6px; overflow:hidden}
+.seg button{border:0; border-radius:0; min-height:38px; background:var(--card); color:var(--acc)}
+.seg button+button{border-left:1px solid var(--acc)}
+.seg button[aria-pressed="true"]{background:var(--acc); color:#fff}
+
+.facts{display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:15px; margin:0}
+.facts dt{color:var(--muted)} .facts dd{margin:0; color:var(--ink)}
+.cardh{font-size:15px; margin:0 0 8px; color:var(--ink)}
+table.t{border-collapse:collapse; width:100%; font-size:15px}
+table.t th{font-family:var(--mono); font-size:12px; color:var(--muted); font-weight:400; text-align:left; padding:4px 6px; background:rgba(28,28,33,.035)}
+table.t td{padding:5px 6px; border-top:1px solid var(--gridline); color:var(--ink)}
+table.t tr.on td{background:var(--acc-soft)}
+table.t td.pos{color:var(--good)} table.t td.neg{color:var(--bad)}
+.tablewrap{overflow-x:auto}
+.note{font-size:14px; color:var(--inksoft); border-left:3px solid var(--acc); background:var(--acc-soft); padding:8px 10px; border-radius:0 6px 6px 0; margin:10px 0 0}
+.pos{color:var(--good); font-weight:700} .neg{color:var(--bad); font-weight:700}
+
+.presets{display:flex; flex-wrap:wrap; gap:8px}
+button{font:inherit; font-size:14px; color:var(--acc); background:var(--card); border:1px solid var(--acc);
+  border-radius:6px; padding:8px 12px; cursor:pointer; min-height:40px}
+button:hover{background:var(--acc-soft)}
+button.solid{background:var(--acc); color:#fff}
+button.solid:hover{filter:brightness(.95); background:var(--acc)}
+button:focus-visible, input:focus-visible, .handle:focus-visible, a:focus-visible{outline:3px solid color-mix(in srgb, var(--acc) 45%, transparent); outline-offset:2px}
+.handle{cursor:grab; touch-action:none} .handle:active{cursor:grabbing}
+
+footer{margin-top:26px; font-size:13px; color:var(--muted); border-top:1px solid var(--line); padding-top:10px}
+footer a{color:var(--acc)}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }

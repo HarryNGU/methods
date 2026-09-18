@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Symmetry with ASTC · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Drag an angle round the unit circle and see its three reflections, their signs and exact values.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D9488'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2.6'/%3E%3Cpath d='M16 16 L22.4 9.6' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#0D9488; --acc-soft:#E8F6F4; --acc-edge:#B5E0DA; --sin:#DC2626; --cos:#2563EB; --tan:#D97706}
+  .plot{aspect-ratio:1/1}
+  .lab.sin{color:var(--sin);font-weight:700} .lab.cos{color:var(--cos);font-weight:700}
+  th.sin{color:var(--sin)!important} th.cos{color:var(--cos)!important} th.tan{color:var(--tan)!important}
+  .quad{font-size:15px; color:var(--inksoft); margin-top:6px}
+  .quad b{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">03 · Trigonometry</span></header>
+  <h1>Symmetry with ASTC</h1>
+  <p class="lede">Drag the point round the circle. The other three points are its reflections: they share the same sizes of <span data-tex="\sin">sin</span>, <span data-tex="\cos">cos</span> and <span data-tex="\tan">tan</span>, and only the signs change. ASTC tells you which are positive.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Unit circle">
+      <div class="gtitle"><span>Unit circle</span><span class="r">drag the bold point</span></div>
+      <div class="plot" id="plot">
+        <svg id="svg" role="img" aria-label="Unit circle with an angle and its three reflections"></svg>
+        <div class="lab cos" id="labCos"></div>
+        <div class="lab sin" id="labSin"></div>
+        <div class="lab acc" id="labAng"></div>
+      </div>
+      <div class="hint">Sin is the height of the point, cos is how far across it is.</div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Angle</span>
+        <div class="eq" id="eq"></div>
+        <div class="quad" id="quad"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><label class="name" for="ang">Angle <span class="what">in steps of 5°</span></label><span class="val" id="vang"></span></div>
+          <input type="range" id="ang"><div class="ends"><span>0</span><span>2π</span></div>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">The four points</h2>
+        <div class="tablewrap"><table class="t"><thead><tr><th>Name</th><th>Angle</th><th class="sin">sin</th><th class="cos">cos</th><th class="tan">tan</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <p class="note" id="rel"></p>
+      </section>
+
+      <div class="presets">
+        <button type="button" data-d="30">π/6</button>
+        <button type="button" data-d="135">3π/4</button>
+        <button type="button" data-d="240">4π/3</button>
+        <button type="button" data-d="330">11π/6</button>
+      </div>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 03, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, PI=Math.PI, CS=getComputedStyle(document.body);
+  var ACC=CS.getPropertyValue('--acc').trim(), SIN=CS.getPropertyValue('--sin').trim(), COS=CS.getPropertyValue('--cos').trim();
+  var deg=150;   // the dragged angle, in degrees, a multiple of 5
+
+  var P=new K.Plot(document.getElementById('svg'),{W:560,H:560,xmin:-1.5,xmax:1.5,ymin:-1.5,ymax:1.5});
+  P.axes({grid:[0.5,0.5],xticks:[[-1,-1],[1,1]],yticks:[[-1,-1],[1,1]],fs:17});
+  var L=P.layer;
+  P.el('circle',{cx:P.sx(0),cy:P.sy(0),r:P.sx(1)-P.sx(0),fill:'none',stroke:'#B9B9C0','stroke-width':2.4});
+  [['A','#16A34A',1,1],['S','#DC2626',-1,1],['T','#D97706',-1,-1],['C','#2563EB',1,-1]].forEach(function(q){
+    var t=P.el('text',{x:P.sx(q[2]*0.6),y:P.sy(q[3]*0.6)+14,'text-anchor':'middle','font-size':40,'font-weight':700,fill:q[1],'fill-opacity':.22,'font-family':'KaTeX_SansSerif, sans-serif'});t.textContent=q[0]});
+  var fam=P.el('g',{}), proj=P.el('g',{}), arc=P.el('path',{fill:'none',stroke:ACC,'stroke-width':2});
+  var ray=P.el('line',{stroke:ACC,'stroke-width':3}), dot=P.el('circle',{r:9,fill:'#fff',stroke:ACC,'stroke-width':3.4});
+  var hit=K.el('circle',{r:34,fill:'transparent',class:'handle',tabindex:'0',role:'button','aria-label':'Angle point. Use the arrow keys to turn it.'},P.top);
+
+  var setAng=K.bindRange(document.getElementById('ang'),K.range(0,355,5),function(v){deg=v;render()});
+  K.draggable(hit,P,function(p){var a=Math.atan2(p.y,p.x)*180/PI;if(a<0)a+=360;var d=Math.round(a/5)*5%360;if(d!==deg){deg=d;render()}});
+  hit.addEventListener('keydown',function(e){var s={ArrowLeft:5,ArrowUp:5,ArrowRight:-5,ArrowDown:-5}[e.key];if(!s)return;e.preventDefault();deg=(deg+s+360)%360;render()});
+  document.querySelectorAll('[data-d]').forEach(function(b){b.onclick=function(){deg=+b.getAttribute('data-d');render()}});
+
+  // exact values for the related angle, from the table in the book
+  var EXACT={0:['0','1','0'],30:['\\tfrac12','\\tfrac{\\sqrt3}{2}','\\tfrac{1}{\\sqrt3}'],45:['\\tfrac{\\sqrt2}{2}','\\tfrac{\\sqrt2}{2}','1'],
+    60:['\\tfrac{\\sqrt3}{2}','\\tfrac12','\\sqrt3'],90:['1','0',null]};
+  function val(kind,d){   // TeX for sin/cos/tan of d degrees, exact where the related angle is special
+    var r=d*PI/180, v=kind==='sin'?Math.sin(r):kind==='cos'?Math.cos(r):Math.tan(r);
+    if(kind==='tan'&&Math.abs(Math.cos(r))<1e-9) return {t:'\\text{undefined}',c:''};
+    if(Math.abs(v)<1e-9) return {t:'0',c:''};
+    var al=rel(d), idx={sin:0,cos:1,tan:2}[kind], mag=EXACT[al]?EXACT[al][idx]:K.fix(Math.abs(v),3);
+    return {t:(v<0?'-':'')+mag,c:v<0?'neg':'pos'};
+  }
+  function rel(d){var m=d%180;return m<=90?m:180-m}   // the acute related angle, in degrees
+  function piT(d){return K.fracPi(d*PI/180)}
+
+  window.render=render;
+  function render(){
+    var r=deg*PI/180, c=Math.cos(r), s=Math.sin(r), al=rel(deg);
+    // the four reflections of the related angle
+    var names=[['\\theta',al],['\\pi-\\theta',180-al],['\\pi+\\theta',180+al],['2\\pi-\\theta',(360-al)%360]];
+    var seen={}, fams=[];
+    names.forEach(function(n){var d=n[1]%360;if(seen[d])return;seen[d]=1;fams.push([n[0],d])});
+    P.clear(fam);
+    fams.forEach(function(f){var rr=f[1]*PI/180;if(f[1]===deg)return;
+      P.el('line',{x1:P.sx(0),y1:P.sy(0),x2:P.sx(Math.cos(rr)),y2:P.sy(Math.sin(rr)),stroke:'#9A9AA2','stroke-width':1.6,'stroke-dasharray':'5 5'},fam);
+      P.el('circle',{cx:P.sx(Math.cos(rr)),cy:P.sy(Math.sin(rr)),r:6.5,fill:'#fff',stroke:'#9A9AA2','stroke-width':2.4},fam)});
+    P.clear(proj);
+    P.el('line',{x1:P.sx(0),y1:P.sy(0),x2:P.sx(c),y2:P.sy(0),stroke:COS,'stroke-width':5,'stroke-linecap':'round'},proj);
+    P.el('line',{x1:P.sx(c),y1:P.sy(0),x2:P.sx(c),y2:P.sy(s),stroke:SIN,'stroke-width':5,'stroke-linecap':'round'},proj);
+    ray.setAttribute('x1',P.sx(0));ray.setAttribute('y1',P.sy(0));ray.setAttribute('x2',P.sx(c));ray.setAttribute('y2',P.sy(s));
+    dot.setAttribute('cx',P.sx(c));dot.setAttribute('cy',P.sy(s));hit.setAttribute('cx',P.sx(c));hit.setAttribute('cy',P.sy(s));
+    var d='';for(var t=0;t<=r+1e-9;t+=0.02){var tt=Math.min(t,r);d+=(d?'L':'M')+P.sx(0.24*Math.cos(tt)).toFixed(1)+' '+P.sy(0.24*Math.sin(tt)).toFixed(1)}
+    arc.setAttribute('d',d);
+
+    var lc=document.getElementById('labCos'), ls=document.getElementById('labSin'), la=document.getElementById('labAng');
+    lc.style.display=Math.abs(c)<0.05?'none':''; ls.style.display=Math.abs(s)<0.05?'none':'';
+    K.tex(lc,'\\cos'); P.place(lc,c/2,0,s>=0?8:-26);
+    K.tex(ls,'\\sin'); P.place(ls,c+(c>=0?0.14:-0.14),s/2,-9);
+    K.tex(la,piT(deg)); var mid=r/2; P.place(la,0.4*Math.cos(mid),0.4*Math.sin(mid),-10);
+
+    K.tex(document.getElementById('eq'),'\\theta='+piT(deg)+'\\;('+deg+'^\\circ)');
+    K.tex(document.getElementById('vang'),piT(deg));
+    var q=deg%90===0?0:Math.floor(deg/90)+1;
+    var qt={0:'On an axis, so one of sin and cos is 0.',1:'Quadrant 1: <b>A</b>ll three are positive.',2:'Quadrant 2: only <b>S</b>in is positive.',3:'Quadrant 3: only <b>T</b>an is positive.',4:'Quadrant 4: only <b>C</b>os is positive.'}[q];
+    document.getElementById('quad').innerHTML=qt;
+
+    var rows='';
+    fams.forEach(function(f){var sv=val('sin',f[1]),cv=val('cos',f[1]),tv=val('tan',f[1]);
+      rows+='<tr class="'+(f[1]===deg?'on':'')+'"><td data-t="'+f[0]+'"></td><td data-t="'+piT(f[1])+'"></td><td class="'+sv.c+'" data-t="'+sv.t+'"></td><td class="'+cv.c+'" data-t="'+cv.t+'"></td><td class="'+tv.c+'" data-t="'+tv.t+'"></td></tr>'});
+    var tb=document.getElementById('rows'); tb.innerHTML=rows;
+    tb.querySelectorAll('[data-t]').forEach(function(n){K.tex(n,n.getAttribute('data-t'))});
+    var relN=document.getElementById('rel');
+    relN.innerHTML='Here <span id="relt"></span>. The highlighted row is your point.';
+    K.tex(document.getElementById('relt'),'\\theta='+piT(al)+'\\;('+al+'^\\circ)');
+    setAng(deg);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  render();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What a confidence interval means · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Take many samples and count how many confidence intervals catch the true proportion p.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316A34A'/%3E%3Cpath d='M16 5V27' stroke='white' stroke-width='2' stroke-dasharray='3 3'/%3E%3Cpath d='M7 10H21M11 16H25M6 22H19' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#16A34A; --acc-soft:#EAF7EF; --acc-edge:#BCE5C8}
+  input[type=range]{accent-color:#15803D}
+  .plot{aspect-ratio:560/460}
+  .tally{font-size:clamp(1.6rem,6vw,2.1rem); color:var(--ink); font-weight:700; margin-top:8px}
+  .tally small{font-size:15px; font-weight:400; color:var(--muted)}
+  .latest{font-size:14.5px; margin-top:8px; color:var(--inksoft)}
+  .actions{display:flex; flex-wrap:wrap; gap:8px}
+  .key{display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--muted); padding:6px 4px 0}
+  .key i{display:inline-block; width:18px; height:4px; border-radius:2px; vertical-align:middle; margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">06 · Probability</span></header>
+  <h1>What a confidence interval means</h1>
+  <p class="lede">Each sample gives a different <span data-tex="\hat p">p̂</span>, so each gives a different interval. Some catch the true <span data-tex="p">p</span> and some miss. The confidence level is the share that catch it in the long run, which you can watch settle as you take more samples.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Intervals">
+      <div class="gtitle"><span>Newest sample at the top</span><span class="r" id="gp"></span></div>
+      <div class="plot"><svg id="svg" role="img" aria-label="Stack of confidence intervals around the true proportion"></svg></div>
+      <div class="key"><span><i style="background:var(--good)"></i>catches p</span><span><i style="background:var(--bad)"></i>misses p</span><span>dashed line: the true p</span></div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Intervals that catch p</span>
+        <div class="tally" id="tally"></div>
+        <div class="latest" id="latest"></div>
+      </section>
+
+      <div class="actions">
+        <button type="button" class="solid" data-k="1">Take 1 sample</button>
+        <button type="button" class="solid" data-k="20">Take 20</button>
+        <button type="button" class="solid" data-k="100">Take 100</button>
+        <button type="button" id="clear">Clear</button>
+      </div>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><label class="name" for="p">True <span data-tex="p">p</span> <span class="what">unknown in real life</span></label><span class="val" id="vp"></span></div>
+          <input type="range" id="p"><div class="ends"><span>0.05</span><span>0.95</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="n"><span data-tex="n">n</span> <span class="what">sample size</span></label><span class="val" id="vn"></span></div>
+          <input type="range" id="n"><div class="ends"><span>10</span><span>500</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><span class="name">Level</span>
+          <span class="seg" role="group" aria-label="Confidence level"><button type="button" data-l="90" aria-pressed="false">90%</button><button type="button" data-l="95" aria-pressed="true">95%</button><button type="button" data-l="99" aria-pressed="false">99%</button></span></div>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">Each interval</h2>
+        <div id="formula"></div>
+        <p class="note">A single interval either contains <span data-tex="p">p</span> or it does not. The 95% describes the method: across many samples, about 95% of intervals made this way contain <span data-tex="p">p</span>. Wider levels catch more often but give wider intervals.</p>
+      </section>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 06, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, CS=getComputedStyle(document.body), GOOD=CS.getPropertyValue('--good').trim(), BAD=CS.getPropertyValue('--bad').trim();
+  var Z={90:1.64,95:1.96,99:2.58};   // the z values the book uses
+  var MAXROWS=100, S={p:0.6,n:100,lvl:95,list:[]};   // list holds every sample; the newest 100 are drawn
+  var P=new K.Plot(document.getElementById('svg'),{W:560,H:460,xmin:0,xmax:1,ymin:-7,ymax:MAXROWS+1});
+  var rows=P.el('g',{}), pl=P.el('line',{stroke:'#1C1C21','stroke-opacity':.75,'stroke-width':1.8,'stroke-dasharray':'6 5'});
+
+  var setP=K.bindRange(document.getElementById('p'),K.range(1,19,1).map(function(k){return k/20}),function(v){S.p=v;S.list=[];render()});
+  var NS=[10,20,30,50,100,200,500];
+  var setN=K.bindRange(document.getElementById('n'),NS,function(v){S.n=v;S.list=[];render()});
+  document.querySelectorAll('[data-l]').forEach(function(b){b.onclick=function(){S.lvl=+b.getAttribute('data-l');S.list=[];render()}});
+  document.getElementById('clear').onclick=function(){S.list=[];render()};
+  document.querySelectorAll('[data-k]').forEach(function(b){b.onclick=function(){for(var i=0;i<+b.getAttribute('data-k');i++)S.list.push(sample());render()}});
+
+  function sample(){
+    var x=0; for(var i=0;i<S.n;i++) if(Math.random()<S.p) x++;
+    var ph=x/S.n, me=Z[S.lvl]*Math.sqrt(ph*(1-ph)/S.n);
+    return {x:x,ph:ph,lo:ph-me,hi:ph+me,hit:S.p>=ph-me&&S.p<=ph+me};
+  }
+
+  window.render=render;
+  function render(){
+    P.axes({grid:[0.1,0],xticks:K.range(0,10,1).map(function(k){return [k/10,K.dec(k/10,1)]}),yticks:[],yaxis:false,xlabel:'p̂'});
+    P.clear(rows);
+    var shown=S.list.slice(-MAXROWS).reverse(), rh=Math.min(3.2,(P.sy(0)-P.sy(1))*0.62);
+    shown.forEach(function(s,i){
+      var y=MAXROWS-i-0.5, c=s.hit?GOOD:BAD;
+      P.el('line',{x1:P.sx(Math.max(0,s.lo)),x2:P.sx(Math.min(1,s.hi)),y1:P.sy(y),y2:P.sy(y),stroke:c,'stroke-width':rh,'stroke-linecap':'round','stroke-opacity':i===0?1:.85},rows);
+      P.el('circle',{cx:P.sx(s.ph),cy:P.sy(y),r:Math.max(1.8,rh*0.75),fill:'#fff',stroke:c,'stroke-width':1.2},rows);
+    });
+    pl.setAttribute('x1',P.sx(S.p));pl.setAttribute('x2',P.sx(S.p));pl.setAttribute('y1',P.sy(MAXROWS+1));pl.setAttribute('y2',P.sy(0));
+
+    var N=S.list.length, hits=S.list.filter(function(s){return s.hit}).length;
+    var t=document.getElementById('tally');
+    t.innerHTML=N?(hits+' of '+N+' <small>('+K.dec(hits/N*100,1)+'%, aiming for '+S.lvl+'%)</small>'):'<small>No samples yet. Take some.</small>';
+    var L=document.getElementById('latest');
+    if(N){var s=S.list[N-1];L.innerHTML='Latest: <span id="lt"></span> '+(s.hit?'<span class="pos">catches p</span>':'<span class="neg">misses p</span>');
+      K.tex(document.getElementById('lt'),'x='+s.x+',\\ \\hat p='+K.dec(s.ph,3)+',\\ ('+K.fix(s.lo,3)+',\\,'+K.fix(s.hi,3)+')')}
+    else L.textContent='';
+    K.tex(document.getElementById('gp'),'p='+K.dec(S.p,2));
+    K.tex(document.getElementById('vp'),K.dec(S.p,2)); K.tex(document.getElementById('vn'),String(S.n));
+    K.tex(document.getElementById('formula'),'\\hat p\\pm '+Z[S.lvl]+'\\sqrt{\\tfrac{\\hat p(1-\\hat p)}{'+S.n+'}}',true);
+    document.querySelectorAll('[data-l]').forEach(function(b){b.setAttribute('aria-pressed',+b.getAttribute('data-l')===S.lvl)});
+    setP(S.p); setN(S.n);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  render();
+});
+</script>
+</body>
+</html>

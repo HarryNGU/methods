@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The binomial distribution · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Change n and p and read off any binomial probability.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316A34A'/%3E%3Cpath d='M7 25v-4M11 25v-9M15 25v-14M19 25v-11M23 25v-5' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#16A34A; --acc-soft:#EAF7EF; --acc-edge:#BCE5C8}
+  .plot{aspect-ratio:560/400}
+  .calc{font-family:var(--mono); font-size:13.5px; color:var(--muted); margin-top:6px}
+  .bar{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">06 · Probability</span></header>
+  <h1>The binomial distribution</h1>
+  <p class="lede">Change <span data-tex="n">n</span> and <span data-tex="p">p</span>, then set the range of <span data-tex="x">x</span> values you want. The shaded bars add up to the probability. Tap a bar to pick a single value.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Chart">
+      <div class="gtitle"><span id="gt"></span><span class="r" id="gmu"></span></div>
+      <div class="plot"><svg id="svg" role="img" aria-label="Bar chart of the binomial probabilities"></svg></div>
+      <div class="hint">Each bar is <span data-tex="\Pr(X=x)">Pr(X = x)</span>. The dashed line is the mean.</div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Probability</span>
+        <div class="eq" id="eq"></div>
+        <div class="calc" id="calc"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><label class="name" for="n"><span data-tex="n">n</span> <span class="what">number of trials</span></label><span class="val" id="vn"></span></div>
+          <input type="range" id="n"><div class="ends"><span>1</span><span>50</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="p"><span data-tex="p">p</span> <span class="what">chance of success</span></label><span class="val" id="vp"></span></div>
+          <input type="range" id="p"><div class="ends"><span>0</span><span>1</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="lo">From <span data-tex="x">x</span></label><span class="val" id="vlo"></span></div>
+          <input type="range" id="lo">
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="hi">To <span data-tex="x">x</span></label><span class="val" id="vhi"></span></div>
+          <input type="range" id="hi">
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">Mean and spread</h2>
+        <dl class="facts">
+          <dt>Mean</dt><dd id="fmu"></dd>
+          <dt>Variance</dt><dd id="fvar"></dd>
+          <dt>Standard deviation</dt><dd id="fsd"></dd>
+        </dl>
+      </section>
+
+      <div class="presets">
+        <button type="button" data-p="20,0.7,14,14">Pr(X = 14), Bi(20, 0.7)</button>
+        <button type="button" data-p="20,0.7,12,16">Pr(12 ≤ X ≤ 16)</button>
+        <button type="button" data-p="10,0.5,0,3">Pr(X ≤ 3), Bi(10, 0.5)</button>
+      </div>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 06, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, ACC=getComputedStyle(document.body).getPropertyValue('--acc').trim();
+  var S={n:20,p:0.7,lo:12,hi:16};
+  var P=new K.Plot(document.getElementById('svg'),{W:560,H:400,xmin:-1,xmax:21,ymin:0,ymax:0.25});
+  var bars=P.el('g',{}), meanL=P.el('line',{stroke:'#1C1C21','stroke-opacity':.55,'stroke-width':1.6,'stroke-dasharray':'6 6'});
+  var iLo=document.getElementById('lo'), iHi=document.getElementById('hi');
+
+  function C(n,r){var c=1;for(var i=1;i<=r;i++)c=c*(n-r+i)/i;return c}
+  function pmf(n,p,x){return C(n,x)*Math.pow(p,x)*Math.pow(1-p,n-x)}
+
+  var setN=K.bindRange(document.getElementById('n'),K.range(1,50,1),function(v){S.n=v;S.lo=Math.min(S.lo,v);S.hi=Math.min(S.hi,v);render()});
+  var setP=K.bindRange(document.getElementById('p'),K.range(0,100,1).map(function(k){return k/100}),function(v){S.p=v;render()});
+  iLo.addEventListener('input',function(){S.lo=+iLo.value;if(S.hi<S.lo)S.hi=S.lo;render()});
+  iHi.addEventListener('input',function(){S.hi=+iHi.value;if(S.lo>S.hi)S.lo=S.hi;render()});
+  document.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){var q=b.getAttribute('data-p').split(',').map(Number);S.n=q[0];S.p=q[1];S.lo=q[2];S.hi=q[3];render()}});
+
+  function prName(lo,hi,n){
+    if(lo===hi) return '\\Pr(X='+lo+')';
+    if(lo===0&&hi===n) return '\\Pr(0\\le X\\le '+n+')';
+    if(lo===0) return '\\Pr(X\\le '+hi+')';
+    if(hi===n) return '\\Pr(X\\ge '+lo+')';
+    return '\\Pr('+lo+'\\le X\\le '+hi+')';
+  }
+
+  window.render=render;
+  function render(){
+    var n=S.n,p=S.p,lo=S.lo,hi=S.hi,probs=[],mx=0,tot=0;
+    for(var x=0;x<=n;x++){var v=pmf(n,p,x);probs.push(v);if(v>mx)mx=v;if(x>=lo&&x<=hi)tot+=v}
+    var top=Math.max(mx*1.18,0.02); P.setWindow(-0.8,n+0.8,-top*0.11,top);
+    var step=n<=12?1:n<=25?2:5, xt=[]; for(var t=0;t<=n;t+=step) xt.push([t,t]);
+    var yst=mx>0.4?0.2:mx>0.15?0.05:mx>0.06?0.02:0.01, yt=[]; for(var y=yst;y<P.ymax;y+=yst) yt.push([y,K.dec(y,2)]);
+    P.axes({grid:[0,yst],xticks:xt,yticks:yt,fs:16,ylabel:false,yaxis:false,xlabel:'x'});
+    P.clear(bars);
+    var bw=Math.max(2,(P.sx(1)-P.sx(0))*0.72);
+    probs.forEach(function(v,x){
+      var on=x>=lo&&x<=hi, r=P.el('rect',{x:P.sx(x)-bw/2,y:P.sy(v),width:bw,height:Math.max(0,P.sy(0)-P.sy(v)),rx:Math.min(3,bw/4),
+        fill:on?ACC:'#CFCFD6',class:'bar'},bars);
+      r.addEventListener('click',function(){S.lo=S.hi=x;render()});
+      var hb=P.el('rect',{x:P.sx(x)-bw/2-2,y:0,width:bw+4,height:P.H,fill:'transparent',class:'bar'},bars);
+      hb.addEventListener('click',function(){S.lo=S.hi=x;render()});
+    });
+    var mu=n*p; meanL.setAttribute('x1',P.sx(mu));meanL.setAttribute('x2',P.sx(mu));meanL.setAttribute('y1',P.sy(0));meanL.setAttribute('y2',0);
+
+    iLo.min=iHi.min=0; iLo.max=iHi.max=n; iLo.value=lo; iHi.value=hi;
+    K.tex(document.getElementById('gt'),'X\\sim\\mathrm{Bi}('+n+',\\,'+K.dec(p,2)+')');
+    K.tex(document.getElementById('gmu'),'\\mu='+K.dec(mu,2));
+    K.tex(document.getElementById('eq'),prName(lo,hi,n)+'='+K.fix(tot,4));
+    var calc=document.getElementById('calc');
+    if(lo===hi){calc.innerHTML='';var s=document.createElement('span');calc.appendChild(s);
+      K.tex(s,'={}^{'+n+'}C_{'+lo+'}\\,('+K.dec(p,2)+')^{'+lo+'}('+K.dec(1-p,2)+')^{'+(n-lo)+'}');
+      calc.appendChild(document.createTextNode('   On the TI-Nspire: binomPdf('+n+','+K.dec(p,2)+','+lo+')'));}
+    else calc.textContent='On the TI-Nspire: binomCdf('+n+','+K.dec(p,2)+','+lo+','+hi+')';
+    K.tex(document.getElementById('vn'),String(n)); K.tex(document.getElementById('vp'),K.dec(p,2));
+    K.tex(document.getElementById('vlo'),String(lo)); K.tex(document.getElementById('vhi'),String(hi));
+    K.tex(document.getElementById('fmu'),'\\mu=np='+K.dec(mu,4));
+    K.tex(document.getElementById('fvar'),'np(1-p)='+K.dec(mu*(1-p),4));
+    K.tex(document.getElementById('fsd'),'\\sigma=\\sqrt{np(1-p)}='+K.fix(Math.sqrt(mu*(1-p)),4));
+    setN(n); setP(p);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  render();
+});
+</script>
+</body>
+</html>

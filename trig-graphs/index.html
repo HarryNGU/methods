@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sketching sine and cosine · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Change a, n, θ and b in y = a sin(n(x + θ)) + b and watch the five key points move.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D9488'/%3E%3Cpath d='M4 16 C9 3 11 3 16 16 S23 29 28 16' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#0D9488; --acc-soft:#E8F6F4; --acc-edge:#B5E0DA}
+  .plot{aspect-ratio:560/420}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">03 · Trigonometry</span></header>
+  <h1>Sketching sine and cosine</h1>
+  <p class="lede">Change <span data-tex="a">a</span>, <span data-tex="n">n</span>, <span data-tex="\theta">θ</span> and <span data-tex="b">b</span> and watch one cycle and its five key points move. The five points sit a quarter of a period apart, from the starting point to the endpoint.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Graph">
+      <div class="gtitle"><span>One cycle (bold) and its five points</span><span class="r" id="meanTag"></span></div>
+      <div class="plot" id="plot">
+        <svg id="svg" role="img" aria-label="Graph of the sine or cosine function with its five key points"></svg>
+        <div class="lab acc" id="labPeriod"></div>
+      </div>
+      <div class="hint" id="offnote"></div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Graph</span>
+        <div class="eq" id="eq"></div>
+        <div class="sub" id="expanded"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><span class="name">Function</span>
+            <span class="seg" role="group" aria-label="Function"><button type="button" id="bSin" aria-pressed="true">sin</button><button type="button" id="bCos" aria-pressed="false">cos</button></span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="a"><span data-tex="a">a</span> <span class="what">amplitude, flips when negative</span></label><span class="val" id="va"></span></div>
+          <input type="range" id="a"><div class="ends"><span>−3</span><span>3</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="n"><span data-tex="n">n</span> <span class="what">sets the period</span></label><span class="val" id="vn"></span></div>
+          <input type="range" id="n"><div class="ends"><span>½</span><span>4</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="th"><span data-tex="\theta">θ</span> <span class="what">slides left and right</span></label><span class="val" id="vth"></span></div>
+          <input type="range" id="th"><div class="ends"><span>−π</span><span>π</span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="b"><span data-tex="b">b</span> <span class="what">mean line</span></label><span class="val" id="vb"></span></div>
+          <input type="range" id="b"><div class="ends"><span>−8</span><span>8</span></div>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">The checklist</h2>
+        <dl class="facts">
+          <dt>Amplitude</dt><dd id="fA"></dd>
+          <dt>Period</dt><dd id="fP"></dd>
+          <dt>Mean line</dt><dd id="fM"></dd>
+          <dt>Range</dt><dd id="fR"></dd>
+          <dt>Starting point</dt><dd id="fS"></dd>
+          <dt>Endpoint</dt><dd id="fE"></dd>
+        </dl>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">The five points</h2>
+        <div class="tablewrap"><table class="t"><thead><tr><th>Point</th><th>x</th><th>y</th><th>Height</th></tr></thead><tbody id="pts"></tbody></table></div>
+      </section>
+
+      <div class="presets">
+        <button type="button" data-p="sin,1,1,0,0">y = sin x</button>
+        <button type="button" data-p="cos,2,2,0,1">y = 2cos(2x) + 1</button>
+        <button type="button" data-p="sin,-1,1,-0.25,0">a &lt; 0</button>
+        <button type="button" data-p="sin,3,2,0.125,-8">Book example</button>
+      </div>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 03, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, PI=Math.PI, ACC=getComputedStyle(document.body).getPropertyValue('--acc').trim()||'#0D9488';
+  var A_VALUES=K.range(-3,3,0.5).filter(function(v){return v!==0});
+  var N_VALUES=[0.5,1,2,3,4];
+  var TH_VALUES=K.range(-24,24,1).map(function(k){return k*PI/24});
+  var B_VALUES=K.range(-8,8,0.5);
+  var S={f:'sin',a:1,n:1,th:0,b:0};
+
+  var svg=document.getElementById('svg');
+  var P=new K.Plot(svg,{W:560,H:420,xmin:-PI,xmax:3*PI,ymin:-4,ymax:4});
+  var g=P.layer;
+  var band=P.el('g',{}), mean=P.el('line',{stroke:ACC,'stroke-width':1.6,'stroke-dasharray':'7 6'});
+  var wave=P.el('path',{fill:'none',stroke:ACC,'stroke-opacity':.3,'stroke-width':2.2});
+  var cyc=P.el('path',{fill:'none',stroke:ACC,'stroke-width':3.4,'stroke-linecap':'round','stroke-linejoin':'round'});
+  var brk=P.el('path',{fill:'none',stroke:ACC,'stroke-width':1.6});
+  var dots=P.el('g',{});
+
+  var setA=K.bindRange(document.getElementById('a'),A_VALUES,function(v){S.a=v;render()});
+  var setN=K.bindRange(document.getElementById('n'),N_VALUES,function(v){S.n=v;render()});
+  var setT=K.bindRange(document.getElementById('th'),TH_VALUES,function(v){S.th=v;render()});
+  var setB=K.bindRange(document.getElementById('b'),B_VALUES,function(v){S.b=v;render()});
+  var bSin=document.getElementById('bSin'), bCos=document.getElementById('bCos');
+  bSin.onclick=function(){S.f='sin';render()}; bCos.onclick=function(){S.f='cos';render()};
+  document.querySelectorAll('[data-p]').forEach(function(btn){btn.onclick=function(){
+    var p=btn.getAttribute('data-p').split(',');S.f=p[0];S.a=+p[1];S.n=+p[2];S.th=+p[3]*PI;S.b=+p[4];render()}});
+
+  function F(x){return S.a*(S.f==='sin'?Math.sin:Math.cos)(S.n*(x+S.th))+S.b}
+  function eqTex(){
+    var aT=S.a===1?'':S.a===-1?'-':K.frac(S.a), fn=S.f==='sin'?'\\sin':'\\cos', nT=S.n===1?'':K.frac(S.n);
+    var arg=S.th===0?nT+'x':(S.n===1?'x'+K.signed(S.th,K.fracPi):nT+'\\left(x'+K.signed(S.th,K.fracPi)+'\\right)');
+    return 'y='+aT+fn+'\\left('+arg+'\\right)'+(S.b===0?'':K.signed(S.b));
+  }
+  function expandedTex(){
+    var aT=S.a===1?'':S.a===-1?'-':K.frac(S.a), fn=S.f==='sin'?'\\sin':'\\cos', nT=S.n===1?'':K.frac(S.n);
+    return 'y='+aT+fn+'\\left('+nT+'x'+K.signed(S.n*S.th,K.fracPi)+'\\right)'+(S.b===0?'':K.signed(S.b));
+  }
+
+  window.render=render;
+  function render(){
+    var a=S.a,n=S.n,th=S.th,b=S.b,amp=Math.abs(a),per=2*PI/n;
+    // keep y = 0 in view and leave room for the largest amplitude around the mean line
+    var ymin=Math.min(-2.5,b-5.6), ymax=Math.max(2.5,b+4.4); P.setWindow(-PI,3*PI,ymin,ymax);
+    var ystep=(ymax-ymin)>12?4:2, yt=[]; for(var v=Math.ceil(ymin/ystep)*ystep;v<=ymax;v+=ystep) if(v!==0) yt.push([v,v]);
+    P.axes({grid:[PI/2,1],xticks:[[-PI,'−π'],[PI,'π'],[2*PI,'2π'],[3*PI,'3π']],yticks:yt,fs:16});
+
+    P.clear(band);
+    [b+amp,b-amp].forEach(function(y){P.el('line',{x1:0,x2:P.W,y1:P.sy(y),y2:P.sy(y),stroke:ACC,'stroke-opacity':.28,'stroke-width':1.2,'stroke-dasharray':'2 5'},band)});
+    mean.setAttribute('x1',0);mean.setAttribute('x2',P.W);mean.setAttribute('y1',P.sy(b));mean.setAttribute('y2',P.sy(b));
+    wave.setAttribute('d',P.path(F));
+    var x1=-th, x5=x1+per;
+    cyc.setAttribute('d',P.path(F,x1,x5,per/300));
+    var by=P.sy(b-amp)+18; brk.setAttribute('d','M'+P.sx(x1)+' '+(by-7)+'V'+by+'H'+P.sx(x5)+'V'+(by-7));
+    var lp=document.getElementById('labPeriod'); K.tex(lp,'\\text{period }'+K.fracPi(per)); P.place(lp,(Math.max(x1,-PI)+Math.min(x5,3*PI))/2,b-amp,24);
+
+    P.clear(dots);
+    var seq=S.f==='sin'?[0,1,0,-1,0]:[1,0,-1,0,1], rows='', off=[];
+    for(var k=0;k<5;k++){
+      var x=x1+k*per/4, y=b+a*seq[k], h=y===b?'mean':(y>b?'max':'min');
+      var inView=x>=-PI-1e-9&&x<=3*PI+1e-9;
+      if(inView){
+        P.el('circle',{cx:P.sx(x),cy:P.sy(y),r:6.5,fill:'#fff',stroke:ACC,'stroke-width':2.6},dots);
+        var t=P.el('text',{x:P.sx(x),y:P.sy(y)+(h==='min'?26:-13),'text-anchor':'middle','font-size':17,'font-weight':700,fill:ACC,'font-family':'KaTeX_SansSerif, sans-serif'},dots);
+        t.textContent=k+1;
+      } else off.push(k+1);
+      rows+='<tr><td>'+(k+1)+(k===0?' <span style="color:var(--muted)">start</span>':k===4?' <span style="color:var(--muted)">end</span>':'')+'</td><td data-t="'+K.fracPi(x)+'"></td><td data-t="'+K.frac(y)+'"></td><td>'+h+'</td></tr>';
+    }
+    var tb=document.getElementById('pts'); tb.innerHTML=rows;
+    tb.querySelectorAll('[data-t]').forEach(function(c){K.tex(c,c.getAttribute('data-t'))});
+    document.getElementById('offnote').textContent=off.length?('Point'+(off.length>1?'s ':' ')+off.join(' and ')+(off.length>1?' are':' is')+' off the edge of the graph; the table still gives '+(off.length>1?'them':'it')+'.'):'Tip: the bold part is one full cycle, from point 1 to point 5.';
+
+    K.tex(document.getElementById('eq'),eqTex());
+    var ex=document.getElementById('expanded');
+    if(n!==1&&th!==0){ex.style.display='';K.tex(ex,'\\text{same as }'+expandedTex())}else ex.style.display='none';
+    K.tex(document.getElementById('va'),K.frac(a)); K.tex(document.getElementById('vn'),K.frac(n));
+    K.tex(document.getElementById('vth'),K.fracPi(th)); K.tex(document.getElementById('vb'),K.frac(b));
+    K.tex(document.getElementById('meanTag'),'\\text{mean line }y='+K.frac(b));
+    K.tex(document.getElementById('fA'),'|a|='+K.frac(amp));
+    K.tex(document.getElementById('fP'),'\\tfrac{2\\pi}{n}='+K.fracPi(per));
+    K.tex(document.getElementById('fM'),'y='+K.frac(b));
+    K.tex(document.getElementById('fR'),'\\left['+K.frac(b-amp)+',\\,'+K.frac(b+amp)+'\\right]');
+    K.tex(document.getElementById('fS'),'\\left('+K.fracPi(x1)+',\\,'+K.frac(b+a*seq[0])+'\\right)');
+    K.tex(document.getElementById('fE'),'\\left('+K.fracPi(x5)+',\\,'+K.frac(b+a*seq[4])+'\\right)');
+    bSin.setAttribute('aria-pressed',S.f==='sin'); bCos.setAttribute('aria-pressed',S.f==='cos');
+    setA(a);setN(n);setT(th);setB(b);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  render();
+});
+</script>
+</body>
+</html>

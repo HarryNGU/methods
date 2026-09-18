@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estimating area · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Change the number of strips and the method, and compare the estimate with the exact area.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234F46E5'/%3E%3Cpath d='M7 25V11h5v14M12 25V13h5v12M17 25V16h5v9' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#4F46E5; --acc-soft:#EEEDFD; --acc-edge:#C9C6F7}
+  .plot{aspect-ratio:560/420}
+  .big{font-size:clamp(1.3rem,5vw,1.6rem); color:var(--ink)}
+  .verdict{font-size:15px; margin-top:6px}
+  .sum{font-size:15px; overflow-x:auto; padding:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">05 · Calculus</span></header>
+  <h1>Estimating area under a graph</h1>
+  <p class="lede">Change the number of strips and the method, then compare the estimate with the exact area from integration. More strips means a better estimate; which way it errs depends on the shape of the graph.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Graph">
+      <div class="gtitle"><span id="gt"></span><span class="r" id="gm"></span></div>
+      <div class="plot"><svg id="svg" role="img" aria-label="Graph with strips under the curve"></svg></div>
+      <div class="hint">The pale region is the exact area. The strips are the estimate.</div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Estimate</span>
+        <div class="eq" id="eq"></div>
+        <div class="verdict" id="verdict"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><span class="name">Method</span></div>
+          <div style="margin-top:8px"><span class="seg" role="group" aria-label="Method">
+            <button type="button" data-m="left" aria-pressed="true">Left endpoint</button><button type="button" data-m="right" aria-pressed="false">Right endpoint</button><button type="button" data-m="trap" aria-pressed="false">Trapezium</button>
+          </span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><span class="name">Graph</span></div>
+          <div style="margin-top:8px"><span class="seg" role="group" aria-label="Graph">
+            <button type="button" data-g="dec" aria-pressed="true">Decreasing</button><button type="button" data-g="inc" aria-pressed="false">Increasing</button>
+          </span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="n">Strips <span class="what">between <span data-tex="x=2">x = 2</span> and <span data-tex="x=5">x = 5</span></span></label><span class="val" id="vn"></span></div>
+          <input type="range" id="n"><div class="ends"><span>1</span><span>30</span></div>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">The working</h2>
+        <dl class="facts">
+          <dt>Strip width</dt><dd id="fw"></dd>
+          <dt>Estimate</dt><dd class="sum" id="fsum"></dd>
+          <dt>Exact area</dt><dd id="fex"></dd>
+          <dt>Error</dt><dd id="ferr"></dd>
+        </dl>
+        <p class="note" id="why"></p>
+      </section>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 05, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, ACC=getComputedStyle(document.body).getPropertyValue('--acc').trim();
+  var A=2, B=5;
+  // f(x) = 9 - 0.1x^2 is the graph in the book (decreasing, concave down); g(x) = 0.3x^2 rises and bends up.
+  var G={
+    dec:{f:function(x){return 9-0.1*x*x},tex:'f(x)=9-0.1x^2',exact:23.1,
+      antTex:'\\left[9x-\\tfrac{x^3}{30}\\right]_2^5',inc:false,concave:'down'},
+    inc:{f:function(x){return 0.3*x*x},tex:'f(x)=0.3x^2',exact:11.7,
+      antTex:'\\left[\\tfrac{x^3}{10}\\right]_2^5',inc:true,concave:'up'}
+  };
+  var S={m:'left',g:'dec',n:6};
+  var P=new K.Plot(document.getElementById('svg'),{W:560,H:420,xmin:0,xmax:7,ymin:-0.8,ymax:10});
+  P.axes({grid:[1,1],xticks:[[1,1],[2,2],[3,3],[4,4],[5,5],[6,6]],yticks:[[2,2],[4,4],[6,6],[8,8]],fs:17});
+  var exactFill=P.el('path',{fill:ACC,'fill-opacity':.08,stroke:'none'});
+  var strips=P.el('g',{});
+  var curve=P.el('path',{fill:'none',stroke:ACC,'stroke-width':3});
+  var bounds=P.el('g',{});
+  [A,B].forEach(function(x){P.el('line',{x1:P.sx(x),x2:P.sx(x),y1:P.sy(0),y2:P.sy(10),stroke:'#9A9AA2','stroke-width':1.2,'stroke-dasharray':'3 5'},bounds)});
+
+  var setN=K.bindRange(document.getElementById('n'),K.range(1,30,1),function(v){S.n=v;render()});
+  document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){S.m=b.getAttribute('data-m');render()}});
+  document.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){S.g=b.getAttribute('data-g');render()}});
+
+  window.render=render;
+  function render(){
+    var g=G[S.g], f=g.f, n=S.n, w=(B-A)/n, est=0, hs=[];
+    curve.setAttribute('d',P.path(f));
+    var d='M'+P.sx(A)+' '+P.sy(0); for(var x=A;x<=B+1e-9;x+=0.02) d+='L'+P.sx(x).toFixed(1)+' '+P.sy(f(x)).toFixed(1);
+    exactFill.setAttribute('d',d+'L'+P.sx(B)+' '+P.sy(0)+'Z');
+    P.clear(strips);
+    for(var i=0;i<n;i++){
+      var x0=A+i*w, x1=x0+w, h0=f(x0), h1=f(x1), pts;
+      if(S.m==='trap'){pts=[[x0,0],[x0,h0],[x1,h1],[x1,0]];est+=w*(h0+h1)/2}
+      else{var h=S.m==='left'?h0:h1;pts=[[x0,0],[x0,h],[x1,h],[x1,0]];est+=w*h}
+      P.el('path',{d:'M'+pts.map(function(p){return P.sx(p[0]).toFixed(1)+' '+P.sy(p[1]).toFixed(1)}).join('L')+'Z',fill:ACC,'fill-opacity':.2,stroke:ACC,'stroke-width':1.3},strips);
+    }
+    for(var k=0;k<=n;k++) hs.push(f(A+k*w));
+
+    var err=est-g.exact, pct=Math.abs(err)/g.exact*100;
+    K.tex(document.getElementById('eq'),'A\\approx'+K.fix(est,4));
+    var over=err>1e-9, v=document.getElementById('verdict');
+    v.innerHTML=(Math.abs(err)<5e-5?'Spot on.':(over?'<span class="neg">Overestimate</span>':'<span class="pos">Underestimate</span>')+' by '+K.fix(Math.abs(err),4)+' ('+K.dec(pct,2)+'%)');
+    K.tex(document.getElementById('gt'),g.tex); K.tex(document.getElementById('gm'),'\\text{'+n+' strip'+(n>1?'s':'')+'}');
+    K.tex(document.getElementById('vn'),String(n));
+    K.tex(document.getElementById('fw'),'w=\\tfrac{5-2}{'+n+'}='+K.dec(w,4));
+
+    // the sum, written out in full when it is short enough to read
+    var used=S.m==='left'?hs.slice(0,n):S.m==='right'?hs.slice(1):hs, terms;
+    if(S.m==='trap') terms=used.map(function(h,i){return (i===0||i===used.length-1?'':'2(')+K.dec(h,3)+(i===0||i===used.length-1?'':')')});
+    else terms=used.map(function(h){return K.dec(h,3)});
+    var inside=terms.length<=6?terms.join('+'):terms.slice(0,2).join('+')+'+\\cdots+'+terms[terms.length-1];
+    var lead=S.m==='trap'?'\\tfrac{w}{2}':'w';
+    K.tex(document.getElementById('fsum'),lead+'\\big['+inside+'\\big]='+K.fix(est,4));
+    K.tex(document.getElementById('fex'),'\\int_2^5 f(x)\\,dx='+g.antTex+'='+K.dec(g.exact,4));
+    K.tex(document.getElementById('ferr'),'\\text{estimate}-\\text{exact}='+(err>=0?'':'-')+K.fix(Math.abs(err),4));
+
+    var why;
+    if(S.m==='trap') why='The graph bends '+g.concave+', so each straight trapezium top sits '+(g.concave==='down'?'under':'over')+' the curve: the trapezium rule '+(g.concave==='down'?'underestimates':'overestimates')+' here.';
+    else{var tall=(S.m==='left')!==g.inc;
+      why='The graph is '+(g.inc?'increasing':'decreasing')+', so each '+(S.m==='left'?'left':'right')+' endpoint is the '+(tall?'taller':'shorter')+' side of its strip: this '+(tall?'overestimates':'underestimates')+'.'}
+    document.getElementById('why').textContent=why;
+    document.querySelectorAll('[data-m]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-m')===S.m)});
+    document.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-g')===S.g)});
+    setN(n);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  render();
+});
+</script>
+</body>
+</html>

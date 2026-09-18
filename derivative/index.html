@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The derivative graph · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Drag a point along f and watch the gradient of its tangent trace out f′.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234F46E5'/%3E%3Cpath d='M5 24 C12 4 20 4 27 12' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M9 7 L25 15' stroke='white' stroke-width='2' stroke-dasharray='3 3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#4F46E5; --acc-soft:#EEEDFD; --acc-edge:#C9C6F7; --norm:#DB2777}
+  .plot{aspect-ratio:560/300}
+  .gsplit{border-top:1px solid var(--gridline); margin-top:8px; padding-top:6px}
+  .status{font-size:15px; margin-top:8px; color:var(--inksoft)}
+  .status b{color:var(--acc)}
+  label.tog{display:flex; align-items:center; gap:8px; font-size:15px; cursor:pointer}
+  label.tog input{width:18px; height:18px; accent-color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">05 · Calculus</span></header>
+  <h1>The derivative graph</h1>
+  <p class="lede">Drag the point along <span data-tex="f">f</span>. The gradient of the tangent there becomes the height of <span data-tex="f'">f′</span> underneath. Watch what happens at the turning points and the point of inflection.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Graphs of f and its derivative">
+      <div class="gtitle"><span id="tf"></span><span class="r">drag the point</span></div>
+      <div class="plot" id="plotF"><svg id="svgF" role="img" aria-label="Graph of f with a tangent line"></svg><div class="lab acc" id="labP"></div></div>
+      <div class="gtitle gsplit"><span id="td"></span><span class="r">height = gradient above</span></div>
+      <div class="plot" id="plotD"><svg id="svgD" role="img" aria-label="Graph of the derivative"></svg></div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip">Gradient</span>
+        <div class="eq" id="eq"></div>
+        <div class="status" id="status"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><span class="name">Function</span></div>
+          <div class="presets" style="margin-top:8px">
+            <span class="seg" role="group" aria-label="Function">
+              <button type="button" data-f="cubic" aria-pressed="true">cubic</button><button type="button" data-f="quad" aria-pressed="false">quadratic</button><button type="button" data-f="sin" aria-pressed="false">sin</button><button type="button" data-f="exp" aria-pressed="false">exp</button>
+            </span>
+          </div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label class="name" for="t"><span data-tex="x">x</span> <span class="what">where the tangent touches</span></label><span class="val" id="vt"></span></div>
+          <input type="range" id="t"><div class="ends"><span id="t0"></span><span id="t1"></span></div>
+        </div>
+        <div class="ctl">
+          <label class="tog"><input type="checkbox" id="showNormal"> Show the normal too</label>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">At this point</h2>
+        <dl class="facts">
+          <dt>Point</dt><dd id="fPt"></dd>
+          <dt>Tangent</dt><dd id="fTan"></dd>
+          <dt id="dtNorm">Normal</dt><dd id="fNorm"></dd>
+        </dl>
+        <p class="note">Turning point of <span data-tex="f">f</span> means an <span data-tex="x">x</span> intercept of <span data-tex="f'">f′</span>. A point of inflection of <span data-tex="f">f</span> means a turning point of <span data-tex="f'">f′</span>.</p>
+      </section>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 05, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, PI=Math.PI, CS=getComputedStyle(document.body), ACC=CS.getPropertyValue('--acc').trim(), NORM=CS.getPropertyValue('--norm').trim();
+  // each function: f, f', f'', window, a grid of x values that lands exactly on every feature, and labels
+  var FN={
+    cubic:{f:function(x){return x*x*x-3*x},d:function(x){return 3*x*x-3},dd:function(x){return 6*x},x:[-2.4,2.4],fy:[-4,4],dy:[-4,6],step:0.05,t:-1.6,
+      ft:'f(x)=x^3-3x',dt:"f'(x)=3x^2-3",xt:[[-2,-2],[-1,-1],[1,1],[2,2]],fyt:[[-2,-2],[2,2]],dyt:[[-2,-2],[2,2],[4,4]]},
+    quad:{f:function(x){return -x*x+2*x+3},d:function(x){return -2*x+2},dd:function(){return -2},x:[-2,4],fy:[-6,5.5],dy:[-7,7],step:0.05,t:-0.5,
+      ft:'f(x)=-x^2+2x+3',dt:"f'(x)=-2x+2",xt:[[-1,-1],[1,1],[2,2],[3,3]],fyt:[[-4,-4],[2,2],[4,4]],dyt:[[-4,-4],[4,4]]},
+    sin:{f:Math.sin,d:Math.cos,dd:function(x){return -Math.sin(x)},x:[-PI,2*PI],fy:[-1.7,1.7],dy:[-1.7,1.7],step:PI/24,t:PI/6,pi:true,
+      ft:'f(x)=\\sin x',dt:"f'(x)=\\cos x",xt:[[-PI,'−π'],[PI/2,'π/2'],[PI,'π'],[3*PI/2,'3π/2'],[2*PI,'2π']],fyt:[[-1,-1],[1,1]],dyt:[[-1,-1],[1,1]]},
+    exp:{f:Math.exp,d:Math.exp,dd:Math.exp,x:[-3,2],fy:[-1,7.5],dy:[-1,7.5],step:0.05,t:0.5,
+      ft:'f(x)=e^x',dt:"f'(x)=e^x",xt:[[-2,-2],[-1,-1],[1,1]],fyt:[[2,2],[4,4],[6,6]],dyt:[[2,2],[4,4],[6,6]]}
+  };
+  var key='cubic', C=FN[key], ts=[], t=C.t, showN=false;
+
+  var PF=new K.Plot(document.getElementById('svgF'),{W:560,H:300,xmin:-1,xmax:1,ymin:-1,ymax:1});
+  var PD=new K.Plot(document.getElementById('svgD'),{W:560,H:300,xmin:-1,xmax:1,ymin:-1,ymax:1});
+  var fCurve=PF.el('path',{fill:'none',stroke:ACC,'stroke-width':3,'stroke-linejoin':'round'});
+  var tan=PF.el('line',{stroke:ACC,'stroke-width':2,'stroke-dasharray':'8 6'}), nrm=PF.el('line',{stroke:NORM,'stroke-width':2,'stroke-dasharray':'3 5'});
+  var guideF=PF.el('line',{stroke:'#9A9AA2','stroke-width':1.2,'stroke-dasharray':'3 5'});
+  var dotF=PF.el('circle',{r:8,fill:'#fff',stroke:ACC,'stroke-width':3});
+  var hit=K.el('circle',{r:34,fill:'transparent',class:'handle',tabindex:'0',role:'button','aria-label':'Point on f. Use the arrow keys to move it.'},PF.top);
+  var dFaint=PD.el('path',{fill:'none',stroke:ACC,'stroke-opacity':.25,'stroke-width':2.4});
+  var dTrace=PD.el('path',{fill:'none',stroke:ACC,'stroke-width':3,'stroke-linejoin':'round'});
+  var guideD=PD.el('line',{stroke:'#9A9AA2','stroke-width':1.2,'stroke-dasharray':'3 5'});
+  var dotD=PD.el('circle',{r:8,fill:'#fff',stroke:ACC,'stroke-width':3});
+  var inputT=document.getElementById('t');
+  inputT.addEventListener('input',function(){t=ts[+inputT.value];render()});
+  function setT(v){inputT.value=ts.indexOf(v)}
+
+  function xT(v){return C.pi?K.fracPi(v):K.dec(v,2)}
+  function num(v){return Math.abs(v)<1e-9?'0':K.dec(v,C.pi?3:2)}
+  function choose(k){
+    key=k; C=FN[k]; ts=K.range(0,Math.round((C.x[1]-C.x[0])/C.step),1).map(function(i){return +(C.x[0]+i*C.step).toFixed(10)});
+    inputT.min=0; inputT.max=ts.length-1; inputT.step=1;
+    t=snapT(C.t);
+    PF.setWindow(C.x[0],C.x[1],C.fy[0],C.fy[1]); PD.setWindow(C.x[0],C.x[1],C.dy[0],C.dy[1]);
+    PF.axes({grid:[C.pi?PI/2:1,1],xticks:C.xt,yticks:C.fyt,fs:17}); PD.axes({grid:[C.pi?PI/2:1,1],xticks:C.xt,yticks:C.dyt,fs:17,ylabel:"y′"});
+    fCurve.setAttribute('d',PF.path(C.f)); dFaint.setAttribute('d',PD.path(C.d));
+    K.tex(document.getElementById('tf'),C.ft); K.tex(document.getElementById('td'),C.dt);
+    K.tex(document.getElementById('t0'),xT(C.x[0])); K.tex(document.getElementById('t1'),xT(C.x[1]));
+    document.querySelectorAll('[data-f]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-f')===k)});
+    render();
+  }
+  document.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){choose(b.getAttribute('data-f'))}});
+  document.getElementById('showNormal').onchange=function(e){showN=e.target.checked;render()};
+  function snapT(x){var best=ts[0];ts.forEach(function(v){if(Math.abs(v-x)<Math.abs(best-x))best=v});return best}
+  K.draggable(hit,PF,function(p){var v=snapT(p.x);if(v!==t){t=v;render()}});
+  hit.addEventListener('keydown',function(e){var s={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1}[e.key];if(!s)return;e.preventDefault();
+    var i=ts.indexOf(t)+s;if(i>=0&&i<ts.length){t=ts[i];render()}});
+
+  function line(el,P,x0,y0,m){   // a full width line through (x0,y0) with gradient m (m=Infinity for vertical)
+    if(!isFinite(m)){el.setAttribute('x1',P.sx(x0));el.setAttribute('x2',P.sx(x0));el.setAttribute('y1',0);el.setAttribute('y2',P.H);return}
+    el.setAttribute('x1',P.sx(P.xmin));el.setAttribute('y1',P.sy(y0+m*(P.xmin-x0)));el.setAttribute('x2',P.sx(P.xmax));el.setAttribute('y2',P.sy(y0+m*(P.xmax-x0)));
+  }
+  function lineTex(m,x0,y0){   // y = mx + c with 2 decimal places
+    var c=y0-m*x0, mt=Math.abs(m)<1e-9?'':(Math.abs(m-1)<1e-9?'':Math.abs(m+1)<1e-9?'-':num(m))+'x';
+    var ct=Math.abs(c)<1e-9?(mt?'':'0'):(mt?(c>0?'+':'-')+num(Math.abs(c)):num(c));
+    return 'y='+mt+ct;
+  }
+
+  window.render=render;
+  function render(){
+    var y0=C.f(t), m=C.d(t), dd=C.dd(t);
+    line(tan,PF,t,y0,m);
+    nrm.style.display=showN?'':'none'; if(showN) line(nrm,PF,t,y0,Math.abs(m)<1e-9?Infinity:-1/m);
+    [guideF,guideD].forEach(function(gl,i){var P=i?PD:PF;gl.setAttribute('x1',P.sx(t));gl.setAttribute('x2',P.sx(t));gl.setAttribute('y1',0);gl.setAttribute('y2',P.H)});
+    dotF.setAttribute('cx',PF.sx(t));dotF.setAttribute('cy',PF.sy(y0));hit.setAttribute('cx',PF.sx(t));hit.setAttribute('cy',PF.sy(y0));
+    dotD.setAttribute('cx',PD.sx(t));dotD.setAttribute('cy',PD.sy(m));
+    dTrace.setAttribute('d',PD.path(C.d,C.x[0],t,(C.x[1]-C.x[0])/400));
+    var lp=document.getElementById('labP'); K.tex(lp,'m='+num(m)); var right=PF.sx(t)<PF.W*0.72; PF.place(lp,t,y0,(m>0)===right?8:-30,right?46:-46);
+
+    K.tex(document.getElementById('eq'),"f'("+xT(t)+")="+num(m));
+    var st;
+    if(Math.abs(m)<1e-9) st='<b>Stationary point.</b> The tangent is flat, so '+"f′"+' is 0: its graph meets the x axis here.';
+    else if(Math.abs(dd)<1e-9) st='<b>Point of inflection.</b> The gradient is at its '+(C.dd(t+0.01)>0?'lowest':'highest')+' nearby, so f′ has a turning point here.';
+    else st=m>0?'Gradient positive: f is increasing, so f′ is above the x axis.':'Gradient negative: f is decreasing, so f′ is below the x axis.';
+    document.getElementById('status').innerHTML=st;
+    K.tex(document.getElementById('vt'),xT(t));
+    K.tex(document.getElementById('fPt'),'\\left('+xT(t)+',\\,'+num(y0)+'\\right)');
+    K.tex(document.getElementById('fTan'),lineTex(m,t,y0));
+    var nd=document.getElementById('fNorm'), nt=document.getElementById('dtNorm');
+    nd.style.display=nt.style.display=showN?'':'none';
+    if(showN) K.tex(nd,Math.abs(m)<1e-9?'x='+num(t):lineTex(-1/m,t,y0));
+    setT(t);
+  }
+  K.texAll();
+  window.addEventListener('resize',render);
+  choose('cubic');
+});
+</script>
+</body>
+</html>
