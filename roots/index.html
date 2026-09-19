@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/kit.js"></script>
 <style>
-  body{--acc:#4F46E5; --acc-soft:#EEEDFD; --acc-edge:#C9C6F7; --tan:#DB2777; --next:#EA580C}
+  body{--acc:#4F46E5; --acc-soft:#EEEDFD; --acc-edge:#C9C6F7; --tan:#DC2626; --next:#16A34A}
   .key{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--muted); padding:8px 4px 0}
   .key span{display:inline-flex; align-items:center; gap:6px}
   .key svg{flex:none}
@@ -68,7 +68,7 @@
           <button type="button" id="reset">Start again</button>
           <span class="seg" role="group" aria-label="Zoom"><button type="button" data-z="0.5" aria-pressed="false">Zoom out</button><button type="button" data-z="1" aria-pressed="true">Whole graph</button><button type="button" data-z="10" aria-pressed="false">×10</button><button type="button" data-z="100" aria-pressed="false">×100</button></span>
         </div>
-        <div class="key" id="key"><span><svg width="26" height="8" aria-hidden="true"><line x1="1" y1="4" x2="25" y2="4" stroke="#DB2777" stroke-width="2.6" stroke-linecap="round"/></svg>tangent each step followed</span><span><svg width="26" height="8" aria-hidden="true"><line x1="1" y1="4" x2="25" y2="4" stroke="#EA580C" stroke-width="2.4" stroke-dasharray="9 7"/></svg>tangent at the newest estimate</span></div>
+        <div class="key" id="key"><span><svg width="26" height="8" aria-hidden="true"><line x1="1" y1="4" x2="25" y2="4" stroke="#DC2626" stroke-width="2.6" stroke-linecap="round"/></svg>tangent each step followed</span><span><svg width="26" height="8" aria-hidden="true"><line x1="1" y1="4" x2="25" y2="4" stroke="#16A34A" stroke-width="3" stroke-dasharray="9 7"/></svg>tangent at the newest estimate</span></div>
         <div class="hint" id="hint"></div>
       </section>
       <section class="card graph" id="ladderBox" aria-label="The interval at each step">
@@ -246,10 +246,8 @@ Kit.ready(function(){
   function lab(txt,x,y,dy,cls){var d=document.createElement('div');d.className='lab '+(cls||'acc');document.getElementById('labs').appendChild(d);K.tex(d,txt);P.place(d,x,y,dy);return d}
   function vline(x,y,g,col,op){P.el('line',{x1:P.sx(x),x2:P.sx(x),y1:P.sy(0),y2:P.sy(y),stroke:col||GREY,'stroke-width':1.3,'stroke-dasharray':'3 5','stroke-opacity':op===undefined?1:op},g)}
   function dot(x,y,g,col,r,fill,op){P.el('circle',{cx:P.sx(x),cy:P.sy(y),r:r||6,fill:fill||'#fff',stroke:col||ACC,'stroke-width':2.4,opacity:op===undefined?1:op},g)}
-  // the tangent at the newest estimate: orange dashes with a white edge, so they show even where they lie along the curve
-  function tline(x0,y0,m,g,op){var e={x1:P.sx(P.xmin),y1:P.sy(y0+m*(P.xmin-x0)),x2:P.sx(P.xmax),y2:P.sy(y0+m*(P.xmax-x0)),'stroke-dasharray':'9 7'};
-    P.el('line',Object.assign({stroke:'#fff','stroke-width':5,'stroke-opacity':op*.95},e),g);
-    P.el('line',Object.assign({stroke:NEXT,'stroke-width':2.4,'stroke-opacity':op},e),g)}
+  // the tangent at the newest estimate: green dashes, as wide as the curve so they show where they lie along it
+  function tline(x0,y0,m,g,op){P.el('line',{x1:P.sx(P.xmin),y1:P.sy(y0+m*(P.xmin-x0)),x2:P.sx(P.xmax),y2:P.sy(y0+m*(P.xmax-x0)),stroke:NEXT,'stroke-width':3,'stroke-dasharray':'9 7','stroke-opacity':op},g)}
   function lerp(a,b,t){return a+(b-a)*t}
   function clamp(t){return Math.max(0,Math.min(1,t))}
   function ease(t){t=clamp(t);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
@@ -408,7 +406,7 @@ Kit.ready(function(){
       if(R.fail==='flat')st.innerHTML='f′('+tr(xn)+') = 0, so the tangent at x = '+tr(xn)+' is flat and never meets the x axis. Newton\'s method fails here: pick a different starting value.';
       else if(R.fail==='far')st.innerHTML='The estimates are running away, so the method has failed. Try a starting value closer to the root.';
       else if(cyc)st.innerHTML='The estimates go round in a cycle: '+xs.slice(-3).map(function(v){return tr(v)}).join(', ')+', and so on. They will never settle, so pick a different starting value.';
-      else if(!n)st.innerHTML='Start at x₀ = '+tr(S.x0)+'. The dashed orange line is the tangent there; the next estimate is where it meets the x axis.';
+      else if(!n)st.innerHTML='Start at x₀ = '+tr(S.x0)+'. The dashed green line is the tangent there; the next estimate is where it meets the x axis.';
       else{var ch=Math.abs(xs[n]-xs[n-1]);
         st.innerHTML='f(x<sub>'+n+'</sub>) = '+fv(yn)+'. '+(fx(xs[n])===fx(xs[n-1])?'x<sub>'+(n-1)+'</sub> and x<sub>'+n+'</sub> agree to '+DP+' decimal places, so the root is '+fx(xn)+' correct to '+DP+' decimal places.':'The last step moved x by '+fv(ch)+'.')}
       done=!!R.fail||n>=MAXK.newton||(n>=1&&Math.abs(xs[n]-xs[n-1])<1e-15);
