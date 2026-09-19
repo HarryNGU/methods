@@ -15,10 +15,22 @@
   body{--acc:#4F46E5; --acc-soft:#EEEDFD; --acc-edge:#C9C6F7; --tan:#DB2777}
   .plot{aspect-ratio:560/420}
   #plotL{aspect-ratio:560/140}
-  .gsplit{border-top:1px solid var(--gridline); margin-top:10px; padding-top:6px}
   .actions{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 4px 0}
-  .zoom{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:8px 4px 0}
-  .zoom .seg button{min-height:34px; font-size:13px; padding:4px 10px; white-space:nowrap}
+  .actions .seg{margin-left:auto}
+  .actions .seg button{min-height:34px; font-size:13px; padding:4px 10px; white-space:nowrap}
+  .left{display:grid; gap:14px; min-width:0} .left>*{min-width:0}
+  /* the step table stays short and scrolls, so it sits beside or just under the graph */
+  #stepsCard .tablewrap{max-height:236px; overflow:auto; border:1px solid var(--gridline); border-radius:6px}
+  table.t thead th{position:sticky; top:0; z-index:1; background:#F6F6F4; white-space:nowrap}
+  table.t tr.new td{animation:flash .9s ease-out}
+  @keyframes flash{from{background:var(--acc-edge)} to{background:var(--acc-soft)}}
+  @media (max-width:480px){ #stepsCard table.t td,#stepsCard table.t th{padding:4px 4px} #stepsCard table.t td{font-size:13px} #stepsCard table.t td.num{font-size:12px} #stepsCard.pad{padding:12px 10px} }
+  @media (min-width:860px) and (min-height:720px){ .left{position:sticky; top:10px} }
+  /* one column on phones: graph, then the step table straight after it */
+  @media (max-width:859px){
+    .left,.stack{display:contents}
+    #gcard{order:0} #stepsCard{order:1} #ladderBox{order:2} #est{order:3} #workCard{order:4} #ctlCard{order:5} #codeCard{order:6} #presets{order:7}
+  }
   button:disabled{opacity:.4; cursor:default; filter:none}
   button:disabled:hover{background:var(--card)} button.solid:disabled:hover{background:var(--acc)}
   .status{font-size:15px; margin-top:8px; color:var(--inksoft)}
@@ -42,30 +54,43 @@
   <p class="lede">Two ways to estimate a root that you cannot find exactly. Step through one iteration at a time and watch the estimate close in on the root, then try the starting values where each method goes wrong.</p>
 
   <div class="layout">
-    <section class="card graph" aria-label="Graph">
-      <div class="gtitle"><span id="gt"></span><span class="r" id="gm"></span></div>
-      <div class="plot" id="plot"><svg id="svg" role="img" aria-label="Graph of f with the current step of the method"></svg><div id="labs"></div></div>
-      <div class="actions">
-        <button type="button" class="solid" id="next">Next step</button>
-        <button type="button" id="back">Back</button>
-        <button type="button" id="reset">Start again</button>
-      </div>
-      <div class="zoom"><span class="hint" style="padding:0" id="hint"></span>
-        <span class="seg" role="group" aria-label="Zoom"><button type="button" data-z="0.5" aria-pressed="false">Zoom out</button><button type="button" data-z="1" aria-pressed="true">Whole graph</button><button type="button" data-z="10" aria-pressed="false">×10</button><button type="button" data-z="100" aria-pressed="false">×100</button></span></div>
-      <div id="ladderBox">
-        <div class="gtitle gsplit"><span>The interval after each step</span><span class="r">half as wide each time</span></div>
+    <div class="left">
+      <section class="card graph" id="gcard" aria-label="Graph">
+        <div class="gtitle"><span id="gt"></span><span class="r" id="gm"></span></div>
+        <div class="plot" id="plot"><svg id="svg" role="img" aria-label="Graph of f with the current step of the method"></svg><div id="labs"></div></div>
+        <div class="actions">
+          <button type="button" class="solid" id="next">Next step</button>
+          <button type="button" id="back">Back</button>
+          <button type="button" id="reset">Start again</button>
+          <span class="seg" role="group" aria-label="Zoom"><button type="button" data-z="0.5" aria-pressed="false">Zoom out</button><button type="button" data-z="1" aria-pressed="true">Whole graph</button><button type="button" data-z="10" aria-pressed="false">×10</button><button type="button" data-z="100" aria-pressed="false">×100</button></span>
+        </div>
+        <div class="hint" id="hint"></div>
+      </section>
+      <section class="card graph" id="ladderBox" aria-label="The interval at each step">
+        <div class="gtitle"><span>The interval after each step</span><span class="r">half as wide each time</span></div>
         <div class="plot" id="plotL"><svg id="svgL" role="img" aria-label="The interval at each step of bisection"></svg></div>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <div class="stack">
-      <section class="card eqcard" aria-live="polite">
+      <section class="card eqcard" id="est" aria-live="polite">
         <span class="chip" id="chip">Estimate</span>
         <div class="eq" id="eq"></div>
         <div class="status" id="status"></div>
       </section>
 
-      <section class="card controls" aria-label="Controls">
+      <section class="card pad" id="stepsCard">
+        <h2 class="cardh">Every step so far</h2>
+        <div class="tablewrap" id="twrap"><table class="t"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+        <p class="note" id="tnote"></p>
+      </section>
+
+      <section class="card pad" id="workCard">
+        <h2 class="cardh">This step</h2>
+        <div class="work" id="work"></div>
+      </section>
+
+      <section class="card controls" id="ctlCard" aria-label="Controls">
         <div class="ctl">
           <div class="row"><span class="name">Method</span>
             <span class="seg" role="group" aria-label="Method"><button type="button" data-m="bisection" aria-pressed="true">Bisection</button><button type="button" data-m="newton" aria-pressed="false">Newton's method</button></span></div>
@@ -88,18 +113,7 @@
         </div>
       </section>
 
-      <section class="card pad">
-        <h2 class="cardh">This step</h2>
-        <div class="work" id="work"></div>
-      </section>
-
-      <section class="card pad">
-        <h2 class="cardh">Every step so far</h2>
-        <div class="tablewrap"><table class="t"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
-        <p class="note" id="tnote"></p>
-      </section>
-
-      <section class="card pad">
+      <section class="card pad" id="codeCard">
         <h2 class="cardh">Pseudocode</h2>
         <pre class="code" id="code"></pre>
       </section>
@@ -133,7 +147,7 @@ Kit.ready(function(){
       ['Stuck in a cycle: x³ − 2x + 2 from x₀ = 0',{fn:'cyc',x0:0,k:4}]]
   };
   var S={m:'bisection',fn:'sq',a:1,b:2,x0:2,k:0,z:1};
-  var MAXK={bisection:30,newton:20}, DP=6;
+  var MAXK={bisection:30,newton:20}, DP=6, lastRows=0, KEYS=window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches;
 
   // ---------- plots ----------
   var P=new K.Plot(document.getElementById('svg'),{W:560,H:420,xmin:-1,xmax:1,ymin:-1,ymax:1});
@@ -204,6 +218,10 @@ Kit.ready(function(){
   function buildPresets(){var box=document.getElementById('presets');box.innerHTML='';
     PRESETS[S.m].forEach(function(p){var b=document.createElement('button');b.type='button';b.textContent=p[0];
       b.onclick=function(){var q=p[1];S.z=1;if(q.fn!==S.fn)setFn(q.fn);Object.keys(q).forEach(function(k){if(k!=='fn')S[k]=q[k]});render()};box.appendChild(b)})}
+  // the arrow keys step forward and back, unless a slider or the x0 handle has focus
+  document.addEventListener('keydown',function(e){var t=e.target;if(/INPUT|SELECT|TEXTAREA/.test(t.tagName)||t===handle||e.metaKey||e.ctrlKey||e.altKey)return;
+    if(e.key==='ArrowRight'&&!document.getElementById('next').disabled){e.preventDefault();S.k++;render()}
+    else if(e.key==='ArrowLeft'&&S.k>0){e.preventDefault();S.k--;render()}});
   K.draggable(handle,P,function(p){var i=nearest(GX,p.x);if(GX[i]!==S.x0){S.x0=GX[i];render()}});
   handle.addEventListener('keydown',function(e){var s={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1}[e.key];if(!s)return;e.preventDefault();
     var i=nearest(GX,S.x0)+s;if(i>=0&&i<GX.length){S.x0=GX[i];render()}});
@@ -339,6 +357,9 @@ Kit.ready(function(){
       K.tex(document.getElementById('gm'),'\\text{'+n+' step'+(n===1?'':'s')+'}');
     }
     work.querySelectorAll('[data-t]').forEach(function(nd){K.tex(nd,nd.getAttribute('data-t'))});
+    // keep the newest row in view, and flash it when a step is added
+    var rowsN=body.querySelector('tr.on')?body.children.length:0,tw=document.getElementById('twrap');
+    if(rowsN>lastRows)body.lastElementChild.classList.add('new');lastRows=rowsN;tw.scrollTop=tw.scrollHeight;
     next.disabled=done; document.getElementById('back').disabled=S.k===0; document.getElementById('reset').disabled=S.k===0;
 
     K.tex(document.getElementById('gt'),'f(x)='+F.tex);
@@ -347,7 +368,7 @@ Kit.ready(function(){
     ['cA','cB'].forEach(function(id){document.getElementById(id).style.display=isB?'':'none'});document.getElementById('cX').style.display=isB?'none':'';
     inA.value=nearest(GA,S.a);inB.value=nearest(GA,S.b);inX.value=nearest(GX,S.x0);
     K.tex(document.getElementById('va'),xt(S.a));K.tex(document.getElementById('vb'),xt(S.b));K.tex(document.getElementById('vx'),xt(S.x0));
-    document.getElementById('hint').textContent=S.z===1?(isB?'Green ends are above the axis, red ends below.':'Drag the dashed circle to move x₀.'):S.z<1?'Zoomed out: twice as much of the graph each way.':'Zoomed in ×'+S.z+' around the current estimate.';
+    document.getElementById('hint').textContent=(S.z===1?(isB?'Green ends are above the axis, red ends below.':'Drag the dashed circle to move x₀.'):S.z<1?'Zoomed out: twice as much of the graph each way.':'Zoomed in ×'+S.z+' around the current estimate.')+(KEYS?' The → and ← keys step forward and back.':'');
     document.querySelectorAll('[data-m]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-m')===S.m)});
     document.querySelectorAll('[data-fn]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-fn')===S.fn)});
     document.querySelectorAll('[data-z]').forEach(function(b){b.setAttribute('aria-pressed',+b.getAttribute('data-z')===S.z)});
