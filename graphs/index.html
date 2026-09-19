@@ -244,23 +244,26 @@ Kit.ready(function(){
         ['Range',s.s1>0?'y>'+ex(s.k):'y<'+ex(s.k)],['Direction','\\text{'+dir+'}','from the two signs']]},
     steps:['Draw the horizontal asymptote \\(y=k\\).','Set \\(x=0\\) for the \\(y\\) intercept; solve \\(y=0\\) with logs for the \\(x\\) intercept.','The sign in front sets up or down; the sign on \\(x\\) sets right or left.']},
 
-  logarithm:{name:'Logarithm',col:'#DC2626',form:'y=\\log_a(bx+c)+k',
-    segs:[{k:'base',t:'Base',o:BASES}],
+  logarithm:{name:'Logarithm',col:'#DC2626',form:'y=\\pm\\log_a(bx+c)+k',
+    segs:[{k:'s1',t:'Sign in front',o:[[1,'+'],[-1,'−']]},{k:'base',t:'Base',o:BASES}],
     params:[{k:'b',t:'b',what:'flips left when negative',v:[-4,-3,-2,-1,-0.5,0.5,1,2,3,4,6]},{k:'c',t:'c',what:'shifts the asymptote',v:vals(-9,9,1)},{k:'k',t:'k',what:'slides up and down',v:vals(-9,9,0.5)}],
-    init:{base:2,b:1,c:0,k:0},
-    presets:[['y = log₂ x',{base:2,b:1,c:0,k:0}],['Book example',{base:3,b:6,c:9,k:-8},2],['y = logₑ(−x)',{base:E,b:-1,c:0,k:0}]],
-    eq:function(s){return 'y=\\log_{'+bT(s.base)+'}\\left('+lin(s.b,s.c)+'\\right)'+(s.k===0?'':sg(s.k))},
+    init:{s1:1,base:2,b:1,c:0,k:0},
+    presets:[['y = log₂ x',{s1:1,base:2,b:1,c:0,k:0}],['y = −log₂ x',{s1:-1,base:2,b:1,c:0,k:0}],['Book example',{s1:1,base:3,b:6,c:9,k:-8},2],['y = logₑ(−x)',{s1:1,base:E,b:-1,c:0,k:0}]],
+    eq:function(s){return 'y='+(s.s1<0?'-':'')+'\\log_{'+bT(s.base)+'}\\left('+lin(s.b,s.c)+'\\right)'+(s.k===0?'':sg(s.k))},
     va:function(s){return -s.c/s.b},
     draw:function(G,s){var va=this.va(s),dir=s.b>0?1:-1,P=G.P,span=dir>0?P.xmax-va:va-P.xmin;G.asy('x',va);if(span<=0)return;
-      G.par(function(u){return va+dir*Math.exp(u)},function(u){return logb(Math.abs(s.b)*Math.exp(u),s.base)+s.k},-14,Math.log(span))},
-    xint:function(s){return (Math.pow(s.base,-s.k)-s.c)/s.b},
-    pts:function(s){var p=[[this.xint(s),0]];if(s.c>0)p.push([0,logb(s.c,s.base)+s.k]);return p},
+      G.par(function(u){return va+dir*Math.exp(u)},function(u){return s.s1*logb(Math.abs(s.b)*Math.exp(u),s.base)+s.k},-14,Math.log(span))},
+    // y = 0 means log(bx + c) = -k/s1 = -k s1, so bx + c = a^(-k s1)
+    xint:function(s){return (Math.pow(s.base,-s.k*s.s1)-s.c)/s.b},
+    pts:function(s){var p=[[this.xint(s),0]];if(s.c>0)p.push([0,s.s1*logb(s.c,s.base)+s.k]);return p},
     feats:function(s){var va=this.va(s),xi=this.xint(s),yi;
       if(s.c<=0)yi='\\text{none, 0 is not in the domain}';
-      else{var L=logb(s.c,s.base);yi=isInt(L)?pt(0,Math.round(L)+s.k):'\\left(0,\\,\\log_{'+bT(s.base)+'}'+s.c+(s.k===0?'':sg(s.k))+'\\right)'+ap(L+s.k)}
+      else{var L=logb(s.c,s.base);yi=isInt(L)?pt(0,s.s1*Math.round(L)+s.k):'\\left(0,\\,'+(s.s1<0?'-':'')+'\\log_{'+bT(s.base)+'}'+s.c+(s.k===0?'':sg(s.k))+'\\right)'+ap(s.s1*L+s.k)}
+      var dir=(s.s1>0?'up':'down')+'-'+(s.b>0?'right':'left');
       return [['Vertical asymptote','x='+ex(va)],['Domain',s.b>0?'x>'+ex(va):'x<'+ex(va)],
-        ['x intercept',exact(xi)?pt(xi,0):'\\left('+K.dec(xi,3)+',\\,0\\right)'],['y intercept',yi],['Range','y\\in\\mathbb{R}']]},
-    steps:['The vertical asymptote is where \\(bx+c=0\\).','The graph only exists where \\(bx+c>0\\).','Set \\(y=0\\) for the \\(x\\) intercept; set \\(x=0\\) for the \\(y\\) intercept if \\(0\\) is in the domain.']},
+        ['x intercept',exact(xi)?pt(xi,0):'\\left('+K.dec(xi,3)+',\\,0\\right)'],['y intercept',yi],['Range','y\\in\\mathbb{R}'],
+        ['Direction','\\text{'+dir+'}','from the two signs']]},
+    steps:['The vertical asymptote is where \\(bx+c=0\\).','The graph only exists where \\(bx+c>0\\).','Set \\(y=0\\) for the \\(x\\) intercept; set \\(x=0\\) for the \\(y\\) intercept if \\(0\\) is in the domain.','The sign in front sets up or down; the sign on \\(x\\) sets right or left.']},
 
   sqrt:{name:'Square root',col:'#D97706',form:'y=n\\sqrt{ax+b}+c',
     params:[{k:'n',t:'n',what:'flips down when negative',v:vals(-3,3,0.5,true)},{k:'a',t:'a',what:'flips left when negative',v:[-5,-4,-3,-2,-1,-0.5,0.5,1,2,3,4,5]},
