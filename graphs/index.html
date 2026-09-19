@@ -298,6 +298,8 @@ Kit.ready(function(){
     forms:function(s){if(s.n===1||s.th===0)return [];var nT=ex(s.n);
       return [['Expanded','y='+co(s.a)+'\\tan\\left('+nT+'x'+K.signed(s.n*s.th,K.fracPi)+'\\right)'+(s.b===0?'':sg(s.b))]]},
     per:function(s){return PI/s.n},
+    // the bold branch runs asymptote to asymptote, one period
+    span:function(s){var per=PI/s.n;return [-s.th-per/2,-s.th+per/2,'\\text{period }'+K.fracPi(per)]},
     draw:function(G,s){var per=PI/s.n,x0=-s.th+per/2,P=G.P,f=function(x){return s.a*Math.tan(s.n*(x+s.th))+s.b};
       var k0=Math.floor((P.xmin-x0)/per)-1,k1=Math.ceil((P.xmax-x0)/per)+1;
       G.asy('y',s.b,true);
@@ -385,6 +387,13 @@ Kit.ready(function(){
 
     // key points and their labels
     var labs=document.getElementById('labs');labs.innerHTML='';
+    // period bracket along the bottom of the graph, the same style as the sine and cosine page
+    if(fam.span){var sp=fam.span.call(fam,s),a0=Math.max(sp[0],P.xmin),a1=Math.min(sp[1],P.xmax);
+      var pl=document.createElement('div');pl.className='lab acc';labs.appendChild(pl);K.tex(pl,sp[2]);
+      // on a small screen the label is bigger relative to the graph, so lift the bracket until the label fits
+      var rh=P.svg.getBoundingClientRect().height||P.H,sc=rh/P.H,by=Math.min(P.H-44,(rh-pl.offsetHeight-10)/sc);
+      P.el('path',{d:'M'+P.sx(a0)+' '+(by-7)+'V'+by+'H'+P.sx(a1)+'V'+(by-7),fill:'none',stroke:col(),'stroke-width':1.6},LY.asy);
+      P.place(pl,(a0+a1)/2,P.ymax-by/P.H*(P.ymax-P.ymin),5)}
     var seen={};
     fam.pts.call(fam,s).forEach(function(p){
       var x=p[0],y=p[1];if(!isFinite(x)||!isFinite(y)||x<P.xmin||x>P.xmax||y<P.ymin||y>P.ymax)return;

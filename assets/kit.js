@@ -85,10 +85,12 @@
     function t(txt,x,y,anchor,extra){var n=el('text',{x:x,y:y,'text-anchor':anchor||'middle','font-size':o.fs||15,fill:'#8C8C94','font-family':'KaTeX_Main, serif'},g);
       for(var k in extra)n.setAttribute(k,extra[k]); n.textContent=txt; return n}
     // skip tick labels that would be cut off at the edge of the plot
-    (o.xticks||[]).forEach(function(p){var X=self.sx(p[0]);if(X>16&&X<self.W-16)t(String(p[1]).replace(/-/g,'−'),X,X0+20)});
+    // when the x axis sits on the bottom or top edge, keep its labels inside the plot
+    var TY=X0+20>this.H-4?X0-8:X0+20, XL=X0-10<16?X0+22:X0-10;
+    (o.xticks||[]).forEach(function(p){var X=self.sx(p[0]);if(X>16&&X<self.W-16)t(String(p[1]).replace(/-/g,'−'),X,TY)});
     var noY=o.yaxis===false;
     (o.yticks||[]).forEach(function(p){var Y=self.sy(p[0]);if(Y>14&&Y<self.H-10)t(String(p[1]).replace(/-/g,'−'),noY?4:Y0-8,noY?Y-5:Y+5,noY?'start':'end')});
-    if(o.xlabel!==false) t(o.xlabel||'x',this.W-10,X0-10,'end',{'font-style':'italic','font-size':18});
+    if(o.xlabel!==false) t(o.xlabel||'x',this.W-10,XL,'end',{'font-style':'italic','font-size':18});
     if(o.yaxis!==false&&o.ylabel!==false) t(o.ylabel||'y',Y0+12,18,'start',{'font-style':'italic','font-size':18});
   };
   // Mouse or touch position in graph coordinates.
