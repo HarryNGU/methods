@@ -56,6 +56,9 @@
     this.setWindow(o.xmin,o.xmax,o.ymin,o.ymax);
   }
   Plot.prototype.setWindow=function(xmin,xmax,ymin,ymax){this.xmin=xmin;this.xmax=xmax;this.ymin=ymin;this.ymax=ymax};
+  // Change the drawing size, e.g. to keep both axes on the same scale.
+  Plot.prototype.setSize=function(W,H){this.W=W;this.H=H;this.svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    var r=this.defs.querySelector('clipPath rect');r.setAttribute('width',W);r.setAttribute('height',H)};
   Plot.prototype.sx=function(x){return (x-this.xmin)/(this.xmax-this.xmin)*this.W};
   Plot.prototype.sy=function(y){return (this.ymax-y)/(this.ymax-this.ymin)*this.H};
   Plot.prototype.el=function(tag,attrs,parent){return el(tag,attrs,parent||this.layer)};
