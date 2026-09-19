@@ -92,7 +92,9 @@
     var TY=X0+20>this.H-4?X0-8:X0+20, XL=X0-10<16?X0+22:X0-10;
     (o.xticks||[]).forEach(function(p){var X=self.sx(p[0]);if(X>16&&X<self.W-16)t(String(p[1]).replace(/-/g,'−'),X,TY)});
     var noY=o.yaxis===false;
-    (o.yticks||[]).forEach(function(p){var Y=self.sy(p[0]);if(Y>14&&Y<self.H-10)t(String(p[1]).replace(/-/g,'−'),noY?4:Y0-8,noY?Y-5:Y+5,noY?'start':'end')});
+    // when the y axis sits on the left edge, put its labels on the inside
+    var inY=!noY&&Y0<40;
+    (o.yticks||[]).forEach(function(p){var Y=self.sy(p[0]);if(Y>14&&Y<self.H-10)t(String(p[1]).replace(/-/g,'−'),noY?4:inY?Y0+7:Y0-8,noY?Y-5:Y+5,noY||inY?'start':'end')});
     if(o.xlabel!==false) t(o.xlabel||'x',this.W-10,XL,'end',{'font-style':'italic','font-size':18});
     if(o.yaxis!==false&&o.ylabel!==false) t(o.ylabel||'y',Y0+12,18,'start',{'font-style':'italic','font-size':18});
   };

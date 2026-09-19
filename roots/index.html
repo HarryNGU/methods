@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bisection and Newton's method · Methods 3 &amp; 4</title>
+<meta name="description" content="Interactive diagram from the Mathematical Methods 3 &amp; 4 Bound Reference. Step through bisection and Newton's method one iteration at a time and watch the estimate close in on the root.">
+<meta name="theme-color" content="#FCFCFA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234F46E5'/%3E%3Cpath d='M4 22H28' stroke='white' stroke-width='1.6' opacity='.7'/%3E%3Cpath d='M6 28 C12 26 18 16 27 5' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M24 9 L13 22' stroke='white' stroke-width='2' stroke-dasharray='3 3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/kit.js"></script>
+<style>
+  body{--acc:#4F46E5; --acc-soft:#EEEDFD; --acc-edge:#C9C6F7; --tan:#DB2777}
+  .plot{aspect-ratio:560/420}
+  #plotL{aspect-ratio:560/140}
+  .gsplit{border-top:1px solid var(--gridline); margin-top:10px; padding-top:6px}
+  .actions{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 4px 0}
+  .zoom{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:8px 4px 0}
+  .zoom .seg button{min-height:34px; font-size:13px; padding:4px 10px; white-space:nowrap}
+  button:disabled{opacity:.4; cursor:default; filter:none}
+  button:disabled:hover{background:var(--card)} button.solid:disabled:hover{background:var(--acc)}
+  .status{font-size:15px; margin-top:8px; color:var(--inksoft)}
+  .fnbtns{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+  .fnbtns button{min-height:38px; padding:4px 10px}
+  .fnbtns button[aria-pressed="true"]{background:var(--acc); color:#fff}
+  .work{font-size:15px; color:var(--ink); overflow-x:auto; overflow-y:hidden}
+  .work p{margin:6px 0}
+  table.t td{font-variant-numeric:tabular-nums; white-space:nowrap}
+  table.t td.num{font-family:var(--mono); font-size:14px}
+  .ok{color:var(--acc); font-weight:700; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px}
+  pre.code{font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0; padding:8px 0; overflow-x:auto; background:rgba(28,28,33,.03); border-radius:6px; color:var(--ink)}
+  pre.code span{display:block; padding:0 12px; white-space:pre}
+  pre.code span.on{background:var(--acc-soft); box-shadow:inset 3px 0 0 var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="run"><a href="../">Mathematical Methods 3 &amp; 4</a><span class="sec">05 · Calculus</span></header>
+  <h1>Bisection and Newton's method</h1>
+  <p class="lede">Two ways to estimate a root that you cannot find exactly. Step through one iteration at a time and watch the estimate close in on the root, then try the starting values where each method goes wrong.</p>
+
+  <div class="layout">
+    <section class="card graph" aria-label="Graph">
+      <div class="gtitle"><span id="gt"></span><span class="r" id="gm"></span></div>
+      <div class="plot" id="plot"><svg id="svg" role="img" aria-label="Graph of f with the current step of the method"></svg><div id="labs"></div></div>
+      <div class="actions">
+        <button type="button" class="solid" id="next">Next step</button>
+        <button type="button" id="back">Back</button>
+        <button type="button" id="reset">Start again</button>
+      </div>
+      <div class="zoom"><span class="hint" style="padding:0" id="hint"></span>
+        <span class="seg" role="group" aria-label="Zoom"><button type="button" data-z="1" aria-pressed="true">Whole graph</button><button type="button" data-z="10" aria-pressed="false">×10</button><button type="button" data-z="100" aria-pressed="false">×100</button></span></div>
+      <div id="ladderBox">
+        <div class="gtitle gsplit"><span>The interval after each step</span><span class="r">half as wide each time</span></div>
+        <div class="plot" id="plotL"><svg id="svgL" role="img" aria-label="The interval at each step of bisection"></svg></div>
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="card eqcard" aria-live="polite">
+        <span class="chip" id="chip">Estimate</span>
+        <div class="eq" id="eq"></div>
+        <div class="status" id="status"></div>
+      </section>
+
+      <section class="card controls" aria-label="Controls">
+        <div class="ctl">
+          <div class="row"><span class="name">Method</span>
+            <span class="seg" role="group" aria-label="Method"><button type="button" data-m="bisection" aria-pressed="true">Bisection</button><button type="button" data-m="newton" aria-pressed="false">Newton's method</button></span></div>
+        </div>
+        <div class="ctl">
+          <div class="row"><span class="name">Function</span></div>
+          <div class="fnbtns" id="fns" role="group" aria-label="Function"></div>
+        </div>
+        <div class="ctl" id="cA">
+          <div class="row"><label class="name" for="a"><span data-tex="a">a</span> <span class="what">left end of the interval</span></label><span class="val" id="va"></span></div>
+          <input type="range" id="a"><div class="ends"><span></span><span></span></div>
+        </div>
+        <div class="ctl" id="cB">
+          <div class="row"><label class="name" for="b"><span data-tex="b">b</span> <span class="what">right end of the interval</span></label><span class="val" id="vb"></span></div>
+          <input type="range" id="b"><div class="ends"><span></span><span></span></div>
+        </div>
+        <div class="ctl" id="cX">
+          <div class="row"><label class="name" for="x0"><span data-tex="x_0">x0</span> <span class="what">starting value, or drag it on the graph</span></label><span class="val" id="vx"></span></div>
+          <input type="range" id="x0"><div class="ends"><span></span><span></span></div>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">This step</h2>
+        <div class="work" id="work"></div>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">Every step so far</h2>
+        <div class="tablewrap"><table class="t"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+        <p class="note" id="tnote"></p>
+      </section>
+
+      <section class="card pad">
+        <h2 class="cardh">Pseudocode</h2>
+        <pre class="code" id="code"></pre>
+      </section>
+
+      <div class="presets" id="presets"></div>
+    </div>
+  </div>
+  <footer>From the <em>Mathematical Methods 3 &amp; 4 Bound Reference</em>, section 05, by Harry Nguyen. <a href="../">All interactive diagrams</a></footer>
+</div>
+
+<script>
+Kit.ready(function(){
+  if(window.__init){window.render();return} window.__init=true;
+  var K=Kit, CS=getComputedStyle(document.body), ACC=CS.getPropertyValue('--acc').trim(), TAN=CS.getPropertyValue('--tan').trim(),
+      GOOD=CS.getPropertyValue('--good').trim(), BAD=CS.getPropertyValue('--bad').trim(), GREY='#9A9AA2';
+
+  // each function: f, f', the graph window, and a sensible start for each method
+  var FN={
+    sq:{tex:'x^2-2',f:function(x){return x*x-2},d:function(x){return 2*x},x:[-2.5,2.5],y:[-3,5],a:1,b:2,x0:2},
+    cub:{tex:'x^3-2x-5',f:function(x){return x*x*x-2*x-5},d:function(x){return 3*x*x-2},x:[-1.5,3.5],y:[-9,18],a:2,b:3,x0:3},
+    cos:{tex:'\\cos x-x',f:function(x){return Math.cos(x)-x},d:function(x){return -Math.sin(x)-1},x:[-1.5,3],y:[-4.5,2.5],a:0,b:1,x0:0},
+    three:{tex:'x^3-3x+1',f:function(x){return x*x*x-3*x+1},d:function(x){return 3*x*x-3},x:[-2.5,2.5],y:[-5,5],a:0,b:1,x0:2},
+    cyc:{tex:'x^3-2x+2',f:function(x){return x*x*x-2*x+2},d:function(x){return 3*x*x-2},x:[-2.5,2],y:[-4,5],a:-2,b:-1,x0:-2}
+  };
+  var ORDER=['sq','cub','cos','three','cyc'];
+  var PRESETS={
+    bisection:[['√2 from [1, 2]',{fn:'sq',a:1,b:2,k:3}],['x³ − 2x − 5 on [2, 3]',{fn:'cub',a:2,b:3,k:3}],['cos x − x on [0, 1]',{fn:'cos',a:0,b:1,k:3}],
+      ['No sign change: x² − 2 on [−2, 2]',{fn:'sq',a:-2,b:2,k:0}],['Three roots: x³ − 3x + 1 on [−2, 2]',{fn:'three',a:-2,b:2,k:4}]],
+    newton:[['√2 from x₀ = 2',{fn:'sq',x0:2,k:3}],['x³ − 2x − 5 from x₀ = 3',{fn:'cub',x0:3,k:3}],['cos x − x from x₀ = 0',{fn:'cos',x0:0,k:3}],
+      ['Flat tangent: x³ − 3x + 1 from x₀ = 1',{fn:'three',x0:1,k:1}],['Lands on a far root: x³ − 3x + 1 from x₀ = 0.95',{fn:'three',x0:0.95,k:3}],
+      ['Stuck in a cycle: x³ − 2x + 2 from x₀ = 0',{fn:'cyc',x0:0,k:4}]]
+  };
+  var S={m:'bisection',fn:'sq',a:1,b:2,x0:2,k:0,z:1};
+  var MAXK={bisection:30,newton:20}, DP=6;
+
+  // ---------- plots ----------
+  var P=new K.Plot(document.getElementById('svg'),{W:560,H:420,xmin:-1,xmax:1,ymin:-1,ymax:1});
+  var L=new K.Plot(document.getElementById('svgL'),{W:560,H:140,xmin:-1,xmax:1,ymin:0,ymax:1});
+  var LY={band:P.el('g',{}),old:P.el('g',{}),curve:P.el('path',{fill:'none',stroke:ACC,'stroke-width':3,'stroke-linejoin':'round'}),now:P.el('g',{}),dots:P.el('g',{})};
+  var ladder=L.el('g',{});
+  var handle=K.el('circle',{r:26,fill:'transparent',class:'handle',tabindex:'0',role:'button','aria-label':'Starting value x0. Use the arrow keys to move it.'},P.top);
+
+  // ---------- numbers ----------
+  function fx(v,dp){if(dp===undefined)dp=DP;var t=(+v).toFixed(dp);return (/^-0\.?0*$/.test(t)?t.slice(1):t).replace('-','−')}   // fixed decimals
+  function tr(v,dp){return K.dec(v,dp===undefined?DP:dp).replace('-','−')}                  // trimmed decimals
+  function fv(v){   // a function value: tiny ones in scientific form
+    if(v===0)return '0'; if(Math.abs(v)>=5e-7)return tr(v);
+    var e=Math.floor(Math.log10(Math.abs(v))),m=v/Math.pow(10,e);
+    return K.dec(m,2).replace('-','−')+' × 10'+String(e).replace('-','⁻').replace(/\d/g,function(d){return '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]})}
+  function ftex(v){return fv(v).replace(/−/g,'-').replace(/ × 10(.*)$/,function(m,p){return '\\times10^{'+p.replace('⁻','-').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g,function(c){return '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)})+'}'})}
+  function xt(v){return tr(v).replace(/−/g,'-')}
+  // digits of v that already agree with the root r, underlined
+  function agree(txt,v,r){if(r===null||!isFinite(v))return txt;var a=v.toFixed(DP),b=r.toFixed(DP),n=0;while(n<a.length&&a[n]===b[n])n++;
+    var s=txt.replace('−','-');n=Math.min(n,s.length);while(n>0&&!/\d/.test(s[n-1]))n--;if(n===0)return txt;
+    return '<span class="ok">'+txt.slice(0,n)+'</span>'+txt.slice(n)}
+
+  // ---------- the two methods ----------
+  function bisect(f,a0,b0,k){   // the interval after each step
+    var a=a0,b=b0,fa=f(a),fb=f(b),out={ok:fa*fb<0,fa:fa,fb:fb,steps:[],root:null};
+    if(!(a<b)||!out.ok)return out;
+    for(var i=0;i<k;i++){var c=(a+b)/2,fc=f(c),st={a:a,b:b,c:c,fa:f(a),fc:fc};
+      if(fc===0){st.hit=true;out.steps.push(st);break}
+      if(f(a)*fc<0){st.keep='left';b=c}else{st.keep='right';a=c}
+      st.na=a;st.nb=b;out.steps.push(st)}
+    // the root this interval is closing in on
+    var lo=a0,hi=b0;for(var j=0;j<80;j++){var m=(lo+hi)/2,fm=f(m);if(fm===0){lo=hi=m;break}if(f(lo)*fm<0)hi=m;else lo=m}out.root=(lo+hi)/2;
+    return out;
+  }
+  function newton(F,x0,k){
+    var out={xs:[x0],steps:[],fail:null,root:null},x=x0;
+    for(var i=0;i<k;i++){var y=F.f(x),m=F.d(x);
+      if(Math.abs(m)<1e-12){out.fail='flat';break}
+      var nx=x-y/m;out.steps.push({x:x,y:y,m:m,nx:nx});out.xs.push(nx);x=nx;
+      if(!isFinite(x)||Math.abs(x)>1e6){out.fail='far';break}}
+    // where the sequence ends up, if it settles
+    var z=x0,ok=false;for(var j=0;j<200;j++){var dm=F.d(z);if(Math.abs(dm)<1e-12)break;var nz=z-F.f(z)/dm;if(!isFinite(nz))break;if(Math.abs(nz-z)<1e-13){z=nz;ok=true;break}z=nz}
+    out.root=ok&&Math.abs(F.f(z))<1e-9?z:null;
+    return out;
+  }
+
+  // ---------- controls ----------
+  var fnBox=document.getElementById('fns');
+  ORDER.forEach(function(id){var b=document.createElement('button');b.type='button';b.setAttribute('data-fn',id);K.tex(b,'f(x)='+FN[id].tex);
+    b.onclick=function(){setFn(id)};fnBox.appendChild(b)});
+  function grid(F,st){return K.range(0,Math.round((F.x[1]-F.x[0])/st),1).map(function(i){return +(F.x[0]+i*st).toFixed(10)})}
+  var inA=document.getElementById('a'),inB=document.getElementById('b'),inX=document.getElementById('x0'),GA=[],GX=[];
+  inA.addEventListener('input',function(){S.a=GA[+inA.value];render()});
+  inB.addEventListener('input',function(){S.b=GA[+inB.value];render()});
+  inX.addEventListener('input',function(){S.x0=GX[+inX.value];render()});
+  function nearest(arr,v){var best=0;for(var i=0;i<arr.length;i++)if(Math.abs(arr[i]-v)<Math.abs(arr[best]-v))best=i;return best}
+  function setFn(id,keep){S.fn=id;var F=FN[id];GA=grid(F,0.25);GX=grid(F,0.05);
+    [inA,inB].forEach(function(i){i.min=0;i.max=GA.length-1;i.step=1});inX.min=0;inX.max=GX.length-1;inX.step=1;
+    [inA,inB,inX].forEach(function(i){var e=i.nextElementSibling.children;K.tex(e[0],xt(F.x[0]));K.tex(e[1],xt(F.x[1]))});
+    if(!keep){S.a=F.a;S.b=F.b;S.x0=F.x0;S.k=0}
+    render()}
+  document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){setMethod(b.getAttribute('data-m'))}});
+  function setMethod(m){S.m=m;S.k=0;try{history.replaceState(null,'','#'+m)}catch(e){}buildPresets();render()}
+  document.querySelectorAll('[data-z]').forEach(function(b){b.onclick=function(){S.z=+b.getAttribute('data-z');render()}});
+  document.getElementById('next').onclick=function(){S.k++;render()};
+  document.getElementById('back').onclick=function(){S.k=Math.max(0,S.k-1);render()};
+  document.getElementById('reset').onclick=function(){S.k=0;render()};
+  function buildPresets(){var box=document.getElementById('presets');box.innerHTML='';
+    PRESETS[S.m].forEach(function(p){var b=document.createElement('button');b.type='button';b.textContent=p[0];
+      b.onclick=function(){var q=p[1];S.z=1;if(q.fn!==S.fn)setFn(q.fn);Object.keys(q).forEach(function(k){if(k!=='fn')S[k]=q[k]});render()};box.appendChild(b)})}
+  K.draggable(handle,P,function(p){var i=nearest(GX,p.x);if(GX[i]!==S.x0){S.x0=GX[i];render()}});
+  handle.addEventListener('keydown',function(e){var s={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1}[e.key];if(!s)return;e.preventDefault();
+    var i=nearest(GX,S.x0)+s;if(i>=0&&i<GX.length){S.x0=GX[i];render()}});
+
+  // tidy tick marks for any window
+  function ticks(lo,hi,n){var raw=(hi-lo)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,st=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p,
+    dp=Math.max(0,-Math.floor(Math.log10(st)+1e-9)),out=[];
+    for(var v=Math.ceil(lo/st)*st;v<=hi+1e-12;v+=st){var r=Math.round(v/st)*st;if(Math.abs(r)<st/2)continue;out.push([r,r.toFixed(dp)])}
+    return {st:st,t:out}}
+
+  var CODE={
+    bisection:['define bisection(f, a, b, n)','  for i from 1 to n','    c ← (a + b) / 2','    if f(a) × f(c) < 0 then','      b ← c','    else','      a ← c','    end if','  end for','  return (a + b) / 2'],
+    newton:['define newton(f, df, x0, n)','  x ← x0','  for i from 1 to n','    x ← x − f(x) / df(x)','  end for','  return x']
+  };
+
+  // ---------- drawing ----------
+  function lab(txt,x,y,dy,cls){var d=document.createElement('div');d.className='lab '+(cls||'acc');document.getElementById('labs').appendChild(d);K.tex(d,txt);P.place(d,x,y,dy);return d}
+  function vline(x,y,g,col,op){P.el('line',{x1:P.sx(x),x2:P.sx(x),y1:P.sy(0),y2:P.sy(y),stroke:col||GREY,'stroke-width':1.3,'stroke-dasharray':'3 5','stroke-opacity':op||1},g)}
+  function dot(x,y,g,col,r,fill){P.el('circle',{cx:P.sx(x),cy:P.sy(y),r:r||6,fill:fill||'#fff',stroke:col||ACC,'stroke-width':2.4},g)}
+
+  window.render=render;
+  function render(){
+    var F=FN[S.fn],f=F.f,isB=S.m==='bisection';
+    S.k=Math.min(S.k,MAXK[S.m]);
+    var R=isB?bisect(f,S.a,S.b,S.k):newton(F,S.x0,S.k);
+    if(isB)S.k=R.steps.length<S.k?R.steps.length:S.k; else S.k=R.steps.length;
+    var cur0=isB?(R.steps.length?(function(s){return s.hit?s.c:(s.na+s.nb)/2})(R.steps[R.steps.length-1]):(S.a+S.b)/2):R.xs[R.xs.length-1];
+    var cur=isFinite(cur0)&&Math.abs(cur0)<1e6?cur0:S.x0;
+
+    // window: the whole graph, or zoomed in around the current estimate
+    var hx=(F.x[1]-F.x[0])/2,hy=(F.y[1]-F.y[0])/2;
+    if(S.z===1)P.setWindow(F.x[0],F.x[1],F.y[0],F.y[1]);else P.setWindow(cur-hx/S.z,cur+hx/S.z,-hy/S.z,hy/S.z);
+    var TX=ticks(P.xmin,P.xmax,7),TY=ticks(P.ymin,P.ymax,6);
+    P.axes({grid:[TX.st,TY.st],xticks:TX.t,yticks:TY.t,fs:15});
+    for(var g in LY)if(g!=='curve')P.clear(LY[g]);
+    LY.curve.setAttribute('d',P.path(f,P.xmin,P.xmax,(P.xmax-P.xmin)/700));
+    var labs=document.getElementById('labs');labs.innerHTML='';
+    var ep=[];   // x positions of axis labels already placed, so they do not pile up
+
+    function axisLab(txt,x,above,cls){var X=P.sx(x);if(X<8||X>P.W-8)return;for(var i=0;i<ep.length;i++)if(Math.abs(ep[i]-X)<26)return;ep.push(X);lab(txt,x,0,above?-24:24,cls)}   // below sits under the tick numbers
+
+    var st=document.getElementById('status'),work=document.getElementById('work'),next=document.getElementById('next');
+    var head=document.getElementById('thead'),body=document.getElementById('tbody'),tnote=document.getElementById('tnote');
+    var done=false;
+
+    if(isB){
+      var a=S.a,b=S.b,s=R.steps,last=s[s.length-1],ca=last?(last.hit?last.c:last.na):a,cb=last?(last.hit?last.c:last.nb):b;
+      // shaded interval, its ends, and the midpoint
+      if(R.ok&&a<b){P.el('rect',{x:P.sx(ca),y:0,width:Math.max(1.5,P.sx(cb)-P.sx(ca)),height:P.H,fill:ACC,'fill-opacity':.1},LY.band);
+        [[ca,f(ca),'a'],[cb,f(cb),'b']].forEach(function(e){vline(e[0],e[1],LY.now,e[1]>0?GOOD:BAD,.9);dot(e[0],e[1],LY.dots,e[1]>0?GOOD:BAD,5.5)});
+        var cm=(ca+cb)/2;if(!last||!last.hit){vline(cm,f(cm),LY.now,ACC,.8);dot(cm,f(cm),LY.dots,ACC,5,ACC)}
+        dot(cur,0,LY.dots,ACC,5.5,ACC);
+        axisLab('c',cur,f(cur)<0,'acc');axisLab('a',ca,f(ca)<0,'faint');axisLab('b',cb,f(cb)<0,'faint');
+      }else if(a<b){[[a,f(a)],[b,f(b)]].forEach(function(e){vline(e[0],e[1],LY.now,e[1]>0?GOOD:e[1]<0?BAD:ACC,.9);dot(e[0],e[1],LY.dots,e[1]>0?GOOD:e[1]<0?BAD:ACC,5.5)});
+        axisLab('a',a,f(a)<0,'faint');axisLab('b',b,f(b)<0,'faint')}
+
+      // the ladder of intervals underneath
+      L.setWindow(P.xmin,P.xmax,0,1);P.clear(ladder);L.clear(L.bg);
+      var rows=[[a,b]].concat(s.map(function(q){return q.hit?[q.c,q.c]:[q.na,q.nb]})),show=rows.slice(-8),off=rows.length-show.length,rh=140/9;
+      TX.t.forEach(function(t){L.el('line',{x1:L.sx(t[0]),x2:L.sx(t[0]),y1:0,y2:140,stroke:'#EFEEE8'},L.bg)});
+      if(R.ok&&a<b)show.forEach(function(r,i){var y=rh*(i+0.9),isNew=i===show.length-1,x1=Math.max(-5,L.sx(r[0])),x2=Math.min(565,L.sx(r[1]));
+        L.el('line',{x1:x1,x2:Math.max(x2,x1+2),y1:y,y2:y,stroke:ACC,'stroke-width':isNew?7:5,'stroke-linecap':'round','stroke-opacity':isNew?1:.35},ladder);
+        var t=L.el('text',{x:4,y:y+4,'font-size':12,fill:'#8C8C94','font-family':'KaTeX_Main, serif',stroke:'#fff','stroke-width':4,'paint-order':'stroke'},ladder);t.textContent=String(off+i)});
+
+      K.tex(document.getElementById('eq'),!(a<b)?'\\text{need }a<b':!R.ok?'\\text{no sign change}':last&&last.hit?'x='+xt(last.c):'x\\approx'+xt(cur)+'\\pm'+xt((cb-ca)/2));
+      if(!(a<b))st.innerHTML='The left end <i>a</i> has to be less than the right end <i>b</i>.';
+      else if(!R.ok){var fa=R.fa,fb=R.fb,cnt=0,prev=f(a);for(var q=1;q<=400;q++){var xq=a+(b-a)*q/400,v=f(xq);if(prev*v<=0&&v!==prev)cnt++;prev=v}
+        st.innerHTML=(fa===0||fb===0?'An end of the interval is already a root.':'f('+tr(a)+') = '+fv(fa)+' and f('+tr(b)+') = '+fv(fb)+' have the same sign, so bisection cannot start. ')+
+          (cnt>=2?'There are '+cnt+' roots in here, but an even number of crossings leaves the signs matching at the ends. Pick a smaller interval around one root.':cnt===0&&fa*fb>0?'The graph does not cross the x axis between them. Pick an interval where it does.':'');}
+      else if(!s.length){var nr=countRoots(f,a,b);
+        st.innerHTML='f('+tr(a)+') = '+fv(R.fa)+' and f('+tr(b)+') = '+fv(R.fb)+' have opposite signs, so a root lies in ['+tr(a)+', '+tr(b)+']. The midpoint is the first estimate.'+
+          (nr>1?' There are '+nr+' roots in this interval, and bisection will close in on just one of them.':'')}
+      else if(last.hit)st.innerHTML='f(c) = 0 exactly, so c = '+tr(last.c)+' is the root.';
+      else st.innerHTML='After '+s.length+' step'+(s.length>1?'s':'')+' the root is in ['+tr(ca)+', '+tr(cb)+']. The midpoint '+tr(cur)+' is within '+tr((cb-ca)/2)+' of it.'+
+        (countRoots(f,a,b)>1?' The starting interval held '+countRoots(f,a,b)+' roots, and bisection only finds one of them.':'');
+      done=!R.ok||!(a<b)||(last&&last.hit)||s.length>=MAXK.bisection;
+
+      // this step
+      if(!R.ok||!(a<b)){work.innerHTML='<p>Check the signs first: bisection needs <span data-t="f(a)\\times f(b)<0"></span>.</p>'}
+      else if(!last){work.innerHTML='<p>Start with <span data-t="a='+xt(a)+'"></span> and <span data-t="b='+xt(b)+'"></span>.</p><p><span data-t="f(a)='+ftex(R.fa)+'"></span> and <span data-t="f(b)='+ftex(R.fb)+'"></span>: opposite signs, so the graph crosses the x axis between them.</p><p>Press Next step to halve the interval.</p>'}
+      else{var same=last.hit?'':last.keep==='left'?'the opposite sign to':'the same sign as';
+        work.innerHTML='<p><span data-t="c=\\dfrac{'+xt(last.a)+'+'+xt(last.b)+'}{2}='+xt(last.c)+'"></span></p><p><span data-t="f(c)='+ftex(last.fc)+'"></span>'+
+          (last.hit?', so c is the root.':', which has '+same+' <span data-t="f(a)='+ftex(last.fa)+'"></span>.')+'</p>'+
+          (last.hit?'':'<p>So the root is in <span data-t="'+(last.keep==='left'?'[a,\\,c]':'[c,\\,b]')+'=['+xt(last.na)+',\\,'+xt(last.nb)+']"></span>.</p>')}
+      head.innerHTML='<tr><th>step</th><th>a</th><th>b</th><th>c</th><th>f(c)</th><th>root in</th></tr>';
+      body.innerHTML=s.map(function(q,i){return '<tr'+(i===s.length-1?' class="on"':'')+'><td>'+(i+1)+'</td><td class="num">'+tr(q.a)+'</td><td class="num">'+tr(q.b)+'</td><td class="num">'+agree(tr(q.c),q.c,R.root)+
+        '</td><td class="num '+(q.fc>0?'pos':q.fc<0?'neg':'')+'">'+fv(q.fc)+'</td><td>'+(q.hit?'c is the root':q.keep==='left'?'[a, c]':'[c, b]')+'</td></tr>'}).join('')||'<tr><td colspan="6" style="color:var(--muted)">No steps yet.</td></tr>';
+      tnote.innerHTML='Underlined digits already match the root. Bisection gains about one decimal place every 3 or 4 steps, since each step halves the interval.';
+      document.getElementById('code').innerHTML=CODE.bisection.map(function(t,i){var on=last&&!last.hit&&((last.keep==='left'&&i===4)||(last.keep==='right'&&i===6));return '<span'+(on?' class="on"':'')+'>'+t+'</span>'}).join('');
+      document.getElementById('chip').textContent='Estimate';
+      K.tex(document.getElementById('gm'),'\\text{'+s.length+' step'+(s.length===1?'':'s')+'}');
+    } else {
+      var xs=R.xs,ss=R.steps,n=ss.length;
+      // earlier steps faint, the newest bold: down to the curve, then along the tangent to the x axis
+      ss.forEach(function(q,i){var isNew=i===n-1,g=isNew?LY.now:LY.old,op=isNew?1:.35;
+        vline(q.x,q.y,g,GREY,op);
+        P.el('line',{x1:P.sx(q.x),y1:P.sy(q.y),x2:P.sx(q.nx),y2:P.sy(0),stroke:TAN,'stroke-width':isNew?2.6:1.8,'stroke-opacity':op},g);
+        dot(q.x,q.y,g,ACC,isNew?5.5:4)});
+      // the tangent at the newest estimate, which the next step will follow
+      var xn=xs[xs.length-1],yn=f(xn),mn=F.d(xn);
+      if(isFinite(xn)&&Math.abs(xn)<1e6){vline(xn,yn,LY.now,GREY,1);
+        if(Math.abs(mn)>1e-12)P.el('line',{x1:P.sx(P.xmin),y1:P.sy(yn+mn*(P.xmin-xn)),x2:P.sx(P.xmax),y2:P.sy(yn+mn*(P.xmax-xn)),stroke:TAN,'stroke-width':1.6,'stroke-dasharray':'7 6','stroke-opacity':.8},LY.now);
+        else P.el('line',{x1:0,y1:P.sy(yn),x2:P.W,y2:P.sy(yn),stroke:TAN,'stroke-width':1.6,'stroke-dasharray':'7 6'},LY.now);
+        dot(xn,yn,LY.dots,ACC,6)}
+      xs.forEach(function(v,i){if(isFinite(v))dot(v,0,LY.dots,i===xs.length-1?ACC:GREY,i===xs.length-1?5:3.5,i===xs.length-1?ACC:'#fff')});
+      for(var j=xs.length-1;j>=0;j--)if(isFinite(xs[j])&&Math.abs(xs[j])<1e6)axisLab('x_{'+j+'}',xs[j],f(xs[j])<0,j===xs.length-1?'acc':'faint');
+      handle.setAttribute('cx',P.sx(S.x0));handle.setAttribute('cy',P.sy(0));
+      if(S.x0>=P.xmin&&S.x0<=P.xmax)P.el('circle',{cx:P.sx(S.x0),cy:P.sy(0),r:9,fill:'none',stroke:ACC,'stroke-width':2,'stroke-dasharray':'3 3'},LY.dots);
+
+      // a cycle: the estimates come back to where they were two steps ago
+      var cyc=n>=2&&Math.abs(xs[n]-xs[n-2])<1e-9&&Math.abs(xs[n]-xs[n-1])>1e-6;
+      K.tex(document.getElementById('eq'),R.fail==='flat'?"f'(x_{"+n+"})=0":R.fail==='far'?'x_{'+n+'}\\to\\infty':cyc?'x_{'+n+'}=x_{'+(n-2)+'}='+xt(xn):'x_{'+n+'}'+(n?'\\approx ':'=')+xt(xn));
+      if(R.fail==='flat')st.innerHTML='f′('+tr(xn)+') = 0, so the tangent at x = '+tr(xn)+' is flat and never meets the x axis. Newton\'s method fails here: pick a different starting value.';
+      else if(R.fail==='far')st.innerHTML='The estimates are running away, so the method has failed. Try a starting value closer to the root.';
+      else if(cyc)st.innerHTML='The estimates go round in a cycle: '+xs.slice(-3).map(function(v){return tr(v)}).join(', ')+', and so on. They will never settle, so pick a different starting value.';
+      else if(!n)st.innerHTML='Start at x₀ = '+tr(S.x0)+'. The dashed pink line is the tangent there; the next estimate is where it meets the x axis.';
+      else{var ch=Math.abs(xs[n]-xs[n-1]);
+        st.innerHTML='f(x<sub>'+n+'</sub>) = '+fv(yn)+'. '+(fx(xs[n])===fx(xs[n-1])?'x<sub>'+(n-1)+'</sub> and x<sub>'+n+'</sub> agree to '+DP+' decimal places, so the root is '+fx(xn)+' correct to '+DP+' decimal places.':'The last step moved x by '+fv(ch)+'.')}
+      done=!!R.fail||n>=MAXK.newton||(n>=1&&Math.abs(xs[n]-xs[n-1])<1e-15);
+
+      if(!n)work.innerHTML='<p><span data-t="x_{n+1}=x_n-\\dfrac{f(x_n)}{f\'(x_n)}"></span></p><p><span data-t="f(x)='+F.tex+'"></span>, so <span data-t="f\'(x)='+texD(S.fn)+'"></span>.</p><p>Press Next step to follow the tangent at <span data-t="x_0='+xt(S.x0)+'"></span> down to the x axis.</p>';
+      else{var q=ss[n-1];work.innerHTML='<p><span data-t="x_{'+n+'}=x_{'+(n-1)+'}-\\dfrac{f(x_{'+(n-1)+'})}{f\'(x_{'+(n-1)+'})}"></span></p><p><span data-t="='+xt(q.x)+'-\\dfrac{'+ftex(q.y)+'}{'+ftex(q.m)+'}='+xt(q.nx)+'"></span></p>'}
+      if(R.fail==='flat')work.innerHTML+='<p><span data-t="f\'(x_{'+n+'})=0"></span>, so the next step would divide by zero.</p>';
+      head.innerHTML='<tr><th>n</th><th>xₙ</th><th>f(xₙ)</th><th>f′(xₙ)</th><th>xₙ₊₁</th></tr>';
+      body.innerHTML=ss.map(function(q,i){return '<tr'+(i===n-1?' class="on"':'')+'><td>'+i+'</td><td class="num">'+agree(fx(q.x),q.x,R.root)+'</td><td class="num">'+fv(q.y)+'</td><td class="num">'+fv(q.m)+'</td><td class="num">'+agree(fx(q.nx),q.nx,R.root)+'</td></tr>'}).join('')||'<tr><td colspan="5" style="color:var(--muted)">No steps yet.</td></tr>';
+      tnote.innerHTML=R.root===null?'This start never settles on a root, so no digits are marked.':'Underlined digits already match the root. Close to the root, the number of correct decimal places roughly doubles with each step.';
+      document.getElementById('code').innerHTML=CODE.newton.map(function(t,i){return '<span'+(n&&i===3?' class="on"':'')+'>'+t+'</span>'}).join('');
+      document.getElementById('chip').textContent=R.fail||cyc?'Fails':'Estimate';
+      K.tex(document.getElementById('gm'),'\\text{'+n+' step'+(n===1?'':'s')+'}');
+    }
+    work.querySelectorAll('[data-t]').forEach(function(nd){K.tex(nd,nd.getAttribute('data-t'))});
+    next.disabled=done; document.getElementById('back').disabled=S.k===0; document.getElementById('reset').disabled=S.k===0;
+
+    K.tex(document.getElementById('gt'),'f(x)='+F.tex);
+    document.getElementById('ladderBox').style.display=isB?'':'none';
+    handle.style.display=isB?'none':'';
+    ['cA','cB'].forEach(function(id){document.getElementById(id).style.display=isB?'':'none'});document.getElementById('cX').style.display=isB?'none':'';
+    inA.value=nearest(GA,S.a);inB.value=nearest(GA,S.b);inX.value=nearest(GX,S.x0);
+    K.tex(document.getElementById('va'),xt(S.a));K.tex(document.getElementById('vb'),xt(S.b));K.tex(document.getElementById('vx'),xt(S.x0));
+    document.getElementById('hint').textContent=S.z===1?(isB?'Green ends are above the axis, red ends below.':'Drag the dashed circle to move x₀.'):'Zoomed in ×'+S.z+' around the current estimate.';
+    document.querySelectorAll('[data-m]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-m')===S.m)});
+    document.querySelectorAll('[data-fn]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-fn')===S.fn)});
+    document.querySelectorAll('[data-z]').forEach(function(b){b.setAttribute('aria-pressed',+b.getAttribute('data-z')===S.z)});
+  }
+  function countRoots(f,a,b){var n=0,pv=f(a);for(var q=1;q<=400;q++){var v=f(a+(b-a)*q/400);if(pv*v<0||v===0)n++;pv=v}return n}
+  function texD(id){return {sq:'2x',cub:'3x^2-2',cos:'-\\sin x-1',three:'3x^2-3',cyc:'3x^2-2'}[id]}
+
+  K.texAll();
+  window.addEventListener('resize',render);
+  var h=(location.hash||'').replace('#','');
+  S.m=h==='newton'?'newton':'bisection';
+  window.addEventListener('hashchange',function(){var m=(location.hash||'').replace('#','');if((m==='newton'||m==='bisection')&&m!==S.m)setMethod(m)});
+  buildPresets();setFn('sq');
+});
+</script>
+</body>
+</html>
